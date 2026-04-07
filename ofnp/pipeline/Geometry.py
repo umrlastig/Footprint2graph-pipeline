@@ -11,7 +11,7 @@ csv.field_size_limit(sys.maxsize)
 import time
 
 import tracklib as tkl
-from pipeline import conflateOnNetwork
+from ofnp import conflateOnNetwork
 
 
 
@@ -50,6 +50,7 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     
     print ('    Number of edges = ', len(network.EDGES))
     print ('    Number of nodes = ', len(network.NODES))
+    print (' Longueur du réseau = ', network.totalLength())
 
     
     # =========================================================================
@@ -318,6 +319,9 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
 
             if edgeprevious != edgeid:
                 if edgeprevious != -1 and len(TRACES) > 1:
+
+
+
                     print ("Fusion pour le edge :", edgeprevious)
                     central = _fusion(e, TRACES, SEARCH)
                     if central is not None:
@@ -454,7 +458,7 @@ def _fusion (e, TRACES, SEARCH):
                              represent_method=tkl.MODE_REP_BARYCENTRE,
                              agg_method=tkl.MODE_AGG_MEDIAN,
                              constraint=False,
-                             verbose=False,
+                             verbose=True,
                              iter_max=25,
                              recursive=rec,
                              cv=cv)

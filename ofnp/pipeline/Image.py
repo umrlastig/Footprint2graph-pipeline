@@ -22,7 +22,7 @@ import tracklib as tkl
 import numpy as np
 
 from osgeo import gdal, ogr, osr
-from pipeline import Shp2centerline
+from ofnp import Shp2centerline
 
 
 

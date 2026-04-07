@@ -12,9 +12,9 @@ import time
 
 import tracklib as tkl
 
-from pipeline import createNetwork, filtreNoeudSimple, deleteSmallEdge
-from pipeline import removeDuplicateGeometries
-from pipeline import skeleton_smoothing
+from ofnp import createNetwork, filtreNoeudSimple, deleteSmallEdge
+from ofnp import removeDuplicateGeometries
+from ofnp import skeleton_smoothing
 
 
 
