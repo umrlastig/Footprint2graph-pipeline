@@ -210,6 +210,8 @@ __marimo__/
 
 old/
 
+doc/source/__pycache__/
+doc/public/
 
 
 
