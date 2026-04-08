@@ -3,14 +3,14 @@
 
 import time
 
-from source.Selection import decoup_resample, second_round
-from source.Image import density_polygonize
-from source.Topology import network
-from source.Geometry import createNetworkGeom
+from ofnp import decoup_resample, second_round
+from ofnp import density_polygonize
+from ofnp import network
+from ofnp import createNetworkGeom
 from util.config import setupenv
 
 
-STAGE = 5
+STAGE = 0
 
 
 """ ======================================================================= """
