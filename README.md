@@ -70,7 +70,7 @@ Temps d'exécution approximatif: xxx min (500+155+50+300+355)
 
 
 <p align="center">
-  <img width="1000px" src="pipeline.png" />
+  <img width="1000px" src="img/pipeline.png" />
 </p>
 
 
