@@ -12,6 +12,16 @@ requirements = (
         ""
 )
 
+doc_requirements = (
+    "sphinx",
+    "sphinx_rtd_theme",
+    "recommonmark",
+    "sphinx-autodoc-typehints",
+	"nbsphinx",
+	"ipykernel",
+    "autodocsumm"
+)
+
 setup (
     name="OutdoorFootprintNetworkPipeline",
     version="1.0.0",
@@ -30,5 +40,8 @@ setup (
         "Programming Language :: Python :: 3.10",
     ],
     packages = ['ofnp','ofnp.algo','ofnp.pipeline','ofnp.util'],
-    install_requires=requirements
+    install_requires=requirements,
+    extras_require={
+        "doc": doc_requirements
+    },
 )

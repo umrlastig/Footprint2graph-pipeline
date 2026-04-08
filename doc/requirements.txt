@@ -8,4 +8,3 @@ nbsphinx
 autodocsumm
 pygments
 nbconvert
-
