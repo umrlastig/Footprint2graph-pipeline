@@ -12,7 +12,7 @@ OutdoorFootprintNetworkPipeline’s documentation
 :View the source code of *OFNP*: https://github.com/umrlastig/OutdoorFootprintNetworkPipeline
 
 
-.. image:: https://img.shields.io/badge/Licence-MIT-brightgreen
+.. image:: https://img.shields.io/badge/licence-MIT-green
   :target https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENSE
 
 
