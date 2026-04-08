@@ -18,11 +18,11 @@ setup (
     description="OFNP is an open-source Python processing pipeline (MIT license) for generating outdoor activity footprint networks from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within a defined spatial and temporal extent.",
     long_description="See ...",
     url="https://github.com/umrlastig/OutdoorFootprintNetworkPipeline",
-    download_url= '',
+    download_url= 'https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/archive/refs/tags/v1.0.0-alpha.tar.gz',
     author="Marie-Dominique Van Damme, Yann Méneroux",
     author_email="todo@ign.fr",
     keywords=[],
-    license="MIT License",
+    license="MIT",
     python_requires=">=3.10",
     classifiers=[
         "Development Status :: 4 - Beta",
