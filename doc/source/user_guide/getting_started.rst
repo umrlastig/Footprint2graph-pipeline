@@ -9,11 +9,6 @@ User Guide
 
 This user guide is an overview and explains some of the key features of *OFNP*.
 
-.. toctree::
-  :maxdepth: 1
-
-  Getting Started <getting_started>  
-  Installation <install>
 
 
 

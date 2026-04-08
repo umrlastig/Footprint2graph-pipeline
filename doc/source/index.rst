@@ -11,11 +11,10 @@ Welcome to OutdoorFootprintNetworkPipeline’s documentation!
 
 :View the source code of *OFNP*: https://github.com/umrlastig/OutdoorFootprintNetworkPipeline
 
-|licence|
 
-.. |licence| image:: https://img.shields.io/badge/Licence-MIT-brightgreen
-                   :alt Software License
-                   :target https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENSE
+.. image:: https://img.shields.io/badge/Licence-MIT-brightgreen
+  :target https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENSE
+
 
 
 .. image:: img/OFNPLogo.png
@@ -23,10 +22,11 @@ Welcome to OutdoorFootprintNetworkPipeline’s documentation!
   :align: center
 
 
+
 .. toctree::
   :maxdepth: 1
   
-  Getting Started <user_guide/index>
+  User Guide <user_guide/index>
   Examples <examples/index>
   
 
