@@ -23,6 +23,11 @@ Welcome to OutdoorFootprintNetworkPipeline’s documentation!
   :align: center
 
 
-
+.. toctree::
+  :maxdepth: 1
+  
+  Getting Started <user_guide/index>
+  Examples <examples/index>
+  
 
 
