@@ -4,8 +4,8 @@
 :Date: 08/04/2026
 
 
-User Guide
-==========
+Getting started
+===============
 
 This user guide is an overview and explains some of the key features of *OFNP*.
 
