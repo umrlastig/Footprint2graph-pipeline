@@ -2,4 +2,4 @@
 
 
 from .KitTopology import *
-
+from .config import *
