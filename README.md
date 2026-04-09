@@ -9,9 +9,9 @@ OFNP is an open-source Python processing pipeline (MIT license) for generating o
 
 
 > Table of Contents
-> - [Documentation](#Documentation)
-> - [Acknowledgments](#Acknowledgments)
-> - [Development & Contributions](#Development_&_Contributions)
+> - [Documentation](#documentation)
+> - [Acknowledgments](#acknowledgments)
+> - [Development & Contributions](#development--contributions)
 
 
 ## Documentation
