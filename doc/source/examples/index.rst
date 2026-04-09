@@ -11,7 +11,7 @@ End-to-End Examples
     :name: examples-gallery
     :glob:
 
-    UG_Simple_End-to-End_Example
-    UG_Real-World_Example
+    Simple_End-to-End_Example
+    Real-World_Example
 
 

@@ -12,8 +12,16 @@ OutdoorFootprintNetworkPipeline’s documentation
 :View the source code of *OFNP*: https://github.com/umrlastig/OutdoorFootprintNetworkPipeline
 
 
-.. image:: https://img.shields.io/badge/licence-MIT-green
-  :target https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENSE
+|status| |licence|
+
+.. |status| image:: https://www.repostatus.org/badges/latest/wip.svg
+                             :alt: WIP – Initial development is in progress, but there has not yet been a stable.
+                             :target: https://www.repostatus.org/#wip
+
+.. |licence| image:: https://img.shields.io/badge/Licence-MIT-brightgreen.svg?style=flat
+                   :alt Software License
+                   :target https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENCE
+
 
 
 .. toctree::
@@ -22,6 +30,7 @@ OutdoorFootprintNetworkPipeline’s documentation
   User Guide <user_guide/index>
   Examples <examples/index>
   
+
 
 .. image:: img/OFNPLogo.png
   :width: 400
