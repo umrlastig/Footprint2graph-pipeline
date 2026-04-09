@@ -7,29 +7,6 @@
 Pipeline overview
 ==================
 
-> Table of Contents
-> - [Pipeline Overview](#pipeline-overview)
->     * [Préparation des traces brutes]()
->     * [Création des cartes de pratiques sportives et extrait du réseau]()
->     * [Calcul de la topologie du réseau]()
->     * [Calcul de la géométrie des arcs du réseau]()
->     * [Second pass]()
-> - [Environment Setup](#environment-setup)
->     * Requirements
->     * Environment Setup
->     * How to Run the Code
-
-<br/>
-
-# Pipeline Overview
-
-Le pipeline a été testé sur 3 zones d'études:
-
-- study area 1 dans les Bauges : 4145 traces, 1172 traces après filtrage,   3km x 2.5km
-- study area 2 dans la vallée de Chamonix - Mont Blanc
-- study ??
-
-
 Le pipeline est composé de 5 briques à exécuter une par une:
 
 
@@ -44,12 +21,20 @@ Le pipeline est composé de 5 briques à exécuter une par une:
 
 Les scripts se lancent dans une console Python. 
 
-Temps d'exécution approximatif: xxx min (500+155+50+300+355)
+
+Préparation des traces brutes
+Création des cartes de pratiques sportives et extrait du réseau
+Calcul de la topologie du réseau
+Calcul de la géométrie des arcs du réseau
+Second pass
 
 
-<p align="center">
-  <img width="1000px" src="img/pipeline.png" />
-</p>
+.. image:: img/pipeline.png
+  :width: 1000
+  :align: center
+
+
+
 
 
 
