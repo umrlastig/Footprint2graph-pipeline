@@ -9,21 +9,20 @@ Pipeline overview
 
 Le pipeline est composé de 5 briques à exécuter une par une:
 
-+------------------------+----------------------------+------------------+
-|                        | DESCRIPTION                | OUTPUT DIR       |
-+========================+============================+==================+
-| Script 1               | filtre, decoup, resample   | decoup, resample |
-+------------------------+----------------------------+------------------+
++------------------------+---------------------------------+--------------------+
+|                        | DESCRIPTION                     | OUTPUT DIR         |
++========================+=================================+====================+
+| Script 1               | filtre, decoup, resample        | decoup, resample   |
++------------------------+---------------------------------+--------------------+
+| Script 2               | création et traitement images   | image, network     |
++------------------------+---------------------------------+--------------------+
+| Script 3               | topologie                       | network            |
++------------------------+---------------------------------+--------------------+
+| Script 4               | recalage, fusion et raccord     | mapmatch, geometry |
++------------------------+---------------------------------+--------------------+
+| Script 5               | 2ème itération                  |                    |
++------------------------+---------------------------------+--------------------+
 
-
-
-
-
-|   |       |             |
-|Script 2   | création et traitement images | image, network              |
-|Script 3   | topologie                     | network                     |
-|Script 4   | recalage, fusion et raccord   | mapmatch, geometry          |
-|Script 5   | second pass                   | geometry                    |
 
 
 Les scripts se lancent dans une console Python. 
@@ -36,7 +35,7 @@ Calcul de la géométrie des arcs du réseau
 Second pass
 
 
-.. image:: img/pipeline.png
+.. image:: ../img/pipeline.png
   :width: 1000
   :align: center
 
