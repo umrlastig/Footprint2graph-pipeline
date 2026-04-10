@@ -56,9 +56,16 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
                            'read_all': True})
     
     resampledtracespath = RESPATH + rep + '/'
+    # tracks = tkl.TrackSource(resampledtracespath, fmt)
+    # tracks = tkl.TrackCollection()
+    tracks = tkl.TrackReader.readFromFile(resampledtracespath, fmt)
+    total = len(tracks)
+    print ('Number files to load: ', total)
 
-    bbox = tkl.Bbox(tkl.ENUCoords(947991.025, 6510752.689),
-                    tkl.ENUCoords(951187.721, 6513143.062))
+
+    # bbox = tkl.Bbox(tkl.ENUCoords(947991.025, 6510752.689),
+    #                tkl.ENUCoords(951187.721, 6513143.062))
+    bbox = tracks.bbox()
 
     af_algos = ['uid']
     cell_operators = [tkl.co_count_distinct]
@@ -69,6 +76,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     rasterG1 = tkl.Raster(bbox=bbox, resolution=resolutionG1, margin=marge,
                     align=tkl.BBOX_ALIGN_LL,
                     novalue=tkl.NO_DATA_VALUE)
+    # print (rasterG1)
 
 
     # Pour chaque algo-agg on crée une grille vide
@@ -76,15 +84,6 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
         aggregate = cell_operators[idx]
         cle = tkl.AFMap.getMeasureName(af_algo, aggregate)
         rasterG1.addAFMap(cle)
-
-
-
-    tracks = tkl.TrackSource(resampledtracespath, fmt)
-    total = len(tracks)
-    print ('Number files to load: ', total)
-
-    # collection = tkl.TrackCollection()
-    # tkl.TrackReader.readFromFile(resampledtracespath, fmt)
 
 
     cpt = 1

@@ -163,7 +163,7 @@ def segmentation_resample(RESPATH, collection, fmt,
 
     tracks = tkl.TrackSource(tracespath, fmt)
     total = len(tracks)
-    print ('Number files to load: ', total)
+    print ('     Number of tracks to resample: ', total)
 
 
     for track in tracks:
@@ -225,7 +225,7 @@ def segmentation_resample(RESPATH, collection, fmt,
 
 
     # =========================================================================
-    print ("Stage 1 finished: segmentation and resampling.")
+    print ("Step 1 finished: segmentation and resampling.")
 
 
 
