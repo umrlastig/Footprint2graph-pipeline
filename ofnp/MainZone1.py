@@ -3,7 +3,7 @@
 
 import time
 
-from ofnp import segmentation_resample, second_round, load_raw_tracks_decoup
+from ofnp import segmentation_resample, second_round, load_raw_tracks_split
 from ofnp import density_polygonize
 from ofnp import network
 from ofnp import createNetworkGeom
@@ -133,7 +133,7 @@ if STAGE == 1:
                            'header': 0,
                            'cmt': '#',
                            'read_all': True})
-    collection = load_raw_tracks_decoup(RESPATH, tracespathsource, fmt, X, Y)
+    collection = load_raw_tracks_split(RESPATH, tracespathsource, fmt, X, Y)
     t1 = time.time()
     total = t1-t0
     print ("Execution time (s):", total)

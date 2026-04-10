@@ -11,9 +11,9 @@ import tracklib as tkl
 
 
 
-def load_raw_tracks_decoup(RESPATH, tracespathsource, fmt, X, Y):
+def load_raw_tracks_split(RESPATH, tracespathsource, fmt, X, Y):
 
-    print ('Loading track data...')
+    print ('Loading and split track data...')
 
     """ ======================================================================= """
     """         Reading                                                         """
@@ -28,13 +28,13 @@ def load_raw_tracks_decoup(RESPATH, tracespathsource, fmt, X, Y):
 
     tracks = tkl.TrackSource(tracespathsource, fmt)
     total = len(tracks)
-    print ('Number files to load: ', total)
+    print ('     Number files to load: ', total)
 
 
     """ ======================================================================= """
     """         Découpage                                                       """
     """                                                                         """
-    print ('Starting decoupage ...')
+    print ('Starting split ...')
 
     cpt = 1
     cutCollection = tkl.TrackCollection()
@@ -58,7 +58,7 @@ def load_raw_tracks_decoup(RESPATH, tracespathsource, fmt, X, Y):
         newtrack.createAnalyticalFeature('track_id', tid)
         cutCollection.addTrack(newtrack)
 
-    print ('     Number of tracks after decoupage: ' + str(cutCollection.size()))
+    print ('     Number of tracks after split: ' + str(cutCollection.size()))
     return cutCollection
 
 
