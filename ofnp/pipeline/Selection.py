@@ -10,29 +10,15 @@ import tracklib as tkl
 
 
 
-def decoup_resample(RESPATH, tracespathsource, X, Y,
-                    NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
-                    resampleSizeGrid = 1, resampleSizeFusion = 5):
 
-    print ("Starting segmentation and resampling...")
+def load_raw_tracks_decoup(RESPATH, tracespathsource, fmt, X, Y):
 
-    RESAMPLE_SIZE_GRID   = resampleSizeGrid
-    RESAMPLE_SIZE_FUSION = resampleSizeFusion
-
+    print ('Loading track data...')
 
     """ ======================================================================= """
     """         Reading                                                         """
     """                                                                         """
-
     print ('Reading track data...')
-    fmt = tkl.TrackFormat({'ext': 'CSV',
-                           'srid': 'ENU',
-                           'id_E': 1, 'id_N': 0, 'id_U': 3, 'id_T': 2,
-                           'time_fmt': '2D/2M/4Y 2h:2m:2s',
-                           'separator': ';',
-                           'header': 0,
-                           'cmt': '#',
-                           'read_all': True})
 
     poly = tkl.Polygon(X, Y)
     constraintBBox = tkl.Constraint(shape=poly,
@@ -46,15 +32,14 @@ def decoup_resample(RESPATH, tracespathsource, X, Y,
 
 
     """ ======================================================================= """
-    """         Segmentation                                                    """
+    """         Découpage                                                       """
     """                                                                         """
-    print ('Starting segmentation ...')
+    print ('Starting decoupage ...')
 
     cpt = 1
     cutCollection = tkl.TrackCollection()
 
     for track in tracks:
-
         if cpt%500 == 0:
             print ('    ', cpt, '/', total)
         cpt += 1
@@ -67,12 +52,51 @@ def decoup_resample(RESPATH, tracespathsource, X, Y,
         if len(selection) <= 0:
             continue
 
+        newtrack = selection.getTrack(0)
+        newtrack.createAnalyticalFeature('num', num)
+        newtrack.createAnalyticalFeature('user_id', uid)
+        newtrack.createAnalyticalFeature('track_id', tid)
+        cutCollection.addTrack(newtrack)
+
+    print ('     Number of tracks after decoupage: ' + str(cutCollection.size()))
+    return cutCollection
+
+
+
+
+def segmentation_resample(collection, NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
+                    resampleSizeGrid = 1, resampleSizeFusion = 5):
+
+    print ("Starting segmentation and resampling...")
+
+    RESAMPLE_SIZE_GRID   = resampleSizeGrid
+    RESAMPLE_SIZE_FUSION = resampleSizeFusion
+
+
+    """ ======================================================================= """
+    """         Segmentation                                                    """
+    """                                                                         """
+    print ('Starting segmentation ...')
+
+    cpt = 1
+    cutCollection = tkl.TrackCollection()
+
+    for track in collection:
+
+        if cpt%500 == 0:
+            print ('    ', cpt, '/', total)
+        cpt += 1
+
+        num = str(track.getObsAnalyticalFeature('num', 0))
+        uid = str(track.getObsAnalyticalFeature('user_id', 0))
+        tid = str(track.getObsAnalyticalFeature('track_id', 0))
+
         idxSelect = 1
         o1 = None
         newtrack = tkl.Track()
         newtrack.uid = uid
         newtrack.tid = tid
-        for o2 in selection.getTrack(0):
+        for o2 in track.getTrack(0):
             if o1 is not None:
                 if o1.distance2DTo(o2) > DIST_MAX_2OBS:
                     # on coupe la trace pour créer un nouveau morceau

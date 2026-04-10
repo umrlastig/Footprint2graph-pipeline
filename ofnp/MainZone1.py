@@ -3,14 +3,15 @@
 
 import time
 
-from ofnp import decoup_resample, second_round
+from ofnp import segmentation_resample, second_round, load_raw_tracks_decoup
 from ofnp import density_polygonize
 from ofnp import network
 from ofnp import createNetworkGeom
 from util.config import setupenv
 
+import tracklib as tkl
 
-STAGE = 0
+STAGE = 1
 
 
 """ ======================================================================= """
@@ -20,8 +21,9 @@ STAGE = 0
 # Répertoire des résultats où les données en sortie vont être enregistrées
 #    ces données servent comme entrée dans l'étape suivante
 #
-#RESPATH = r'/home/md_vandamme/4_RESEAU/Ex2Z1Run/'
-RESPATH = r'/home/md_vandamme/4_RESEAU/Ex2Z1Walk/'
+# RESPATH = r'/home/md_vandamme/4_RESEAU/Ex2Z1Run/'
+# Ex2Z1Walk
+RESPATH = r'/home/md_vandamme/4_RESEAU/ZTEMPZ1/'
 #RESPATH = r'/home/md_vandamme/4_RESEAU/Ex3Z1Run/'
 #RESPATH = r'/home/md_vandamme/4_RESEAU/DixTracesTest/'
 
@@ -123,8 +125,20 @@ setupenv(RESPATH)
 
 if STAGE == 1:
     t0 = time.time()
-    decoup_resample(RESPATH, tracespathsource, X, Y,
-                    NB_OBS_MIN, DIST_MAX_2OBS,
+    fmt = tkl.TrackFormat({'ext': 'CSV',
+                           'srid': 'ENU',
+                           'id_E': 1, 'id_N': 0, 'id_U': 3, 'id_T': 2,
+                           'time_fmt': '2D/2M/4Y 2h:2m:2s',
+                           'separator': ';',
+                           'header': 0,
+                           'cmt': '#',
+                           'read_all': True})
+    collection = load_raw_tracks_decoup(RESPATH, tracespathsource, fmt, X, Y)
+    t1 = time.time()
+    total = t1-t0
+    print ("Execution time (s):", total)
+    t0 = t1
+    segmentation_resample(collection, NB_OBS_MIN, DIST_MAX_2OBS,
                     RESAMPLE_SIZE_GRID, RESAMPLE_SIZE_FUSION)
     t1 = time.time()
     total = t1-t0
