@@ -11,7 +11,7 @@ from util.config import setupenv
 
 import tracklib as tkl
 
-STAGE = 1
+STAGE = 2
 
 
 """ ======================================================================= """
@@ -74,7 +74,7 @@ G2_SIZE = 30 # 50
 SEUIL_DENSITE = 360  # 15 - 1000
 SEUIL_SURFACE = 1000 # m2 - 50000 - 7000
 
-r = 2   # Raster resolution
+#r = 2   # Raster resolution
 f = 2   # Cut factor
 
 
@@ -138,7 +138,8 @@ if STAGE == 1:
     total = t1-t0
     print ("Execution time (s):", total)
     t0 = t1
-    segmentation_resample(collection, NB_OBS_MIN, DIST_MAX_2OBS,
+
+    segmentation_resample(RESPATH, collection, fmt, NB_OBS_MIN, DIST_MAX_2OBS,
                     RESAMPLE_SIZE_GRID, RESAMPLE_SIZE_FUSION)
     t1 = time.time()
     total = t1-t0

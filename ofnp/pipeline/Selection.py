@@ -59,18 +59,23 @@ def load_raw_tracks_split(RESPATH, tracespathsource, fmt, X, Y):
         cutCollection.addTrack(newtrack)
 
     print ('     Number of tracks after split: ' + str(cutCollection.size()))
+
+
     return cutCollection
 
 
 
 
-def segmentation_resample(collection, NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
+def segmentation_resample(RESPATH, collection, fmt,
+                          NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
                     resampleSizeGrid = 1, resampleSizeFusion = 5):
 
     print ("Starting segmentation and resampling...")
 
     RESAMPLE_SIZE_GRID   = resampleSizeGrid
     RESAMPLE_SIZE_FUSION = resampleSizeFusion
+
+    total = len(collection)
 
 
     """ ======================================================================= """
@@ -96,7 +101,7 @@ def segmentation_resample(collection, NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
         newtrack = tkl.Track()
         newtrack.uid = uid
         newtrack.tid = tid
-        for o2 in track.getTrack(0):
+        for o2 in track:
             if o1 is not None:
                 if o1.distance2DTo(o2) > DIST_MAX_2OBS:
                     # on coupe la trace pour créer un nouveau morceau
