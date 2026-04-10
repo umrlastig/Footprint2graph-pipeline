@@ -128,7 +128,7 @@ def segmentation_resample(RESPATH, collection, fmt,
             newtrack.createAnalyticalFeature('version', version)
             cutCollection.addTrack(newtrack)
 
-    print ('     Number of tracks after segmentation: ' + str(cutCollection.size()))
+    print ('    Number of tracks after segmentation: ' + str(cutCollection.size()))
 
 
     """ ======================================================================= """
@@ -163,7 +163,7 @@ def segmentation_resample(RESPATH, collection, fmt,
 
     tracks = tkl.TrackSource(tracespath, fmt)
     total = len(tracks)
-    print ('     Number of tracks to resample: ', total)
+    print ('    Number of tracks to resample: ', total)
 
 
     for track in tracks:
@@ -225,7 +225,7 @@ def segmentation_resample(RESPATH, collection, fmt,
 
 
     # =========================================================================
-    print ("Step 1 finished: segmentation and resampling.")
+    print ("Stage 1 finished: segmentation and resampling.")
 
 
 
