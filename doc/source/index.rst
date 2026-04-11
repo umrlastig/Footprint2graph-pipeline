@@ -39,8 +39,8 @@ History and acknowledgement
 *OFNP* has been developed by two contributors who are also involved in maintaining *Tracklib*. It is designed to be used within the IntForOut project (2024-2027) to generate different networks for various activities across diverse spatial and temporal scales.
 
 
-Citing OFNP 
-============
+How to Cite OFNP
+=================
 
 To be completed
 
