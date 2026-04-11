@@ -7,8 +7,8 @@
 End-to-End Examples
 ====================
 
-Examples with Simulated and Real Trajectories
-----------------------------------------------
+With Simulated and Real Trajectories
+--------------------------------------
 
 .. nbgallery::
     :name: examples-gallery
