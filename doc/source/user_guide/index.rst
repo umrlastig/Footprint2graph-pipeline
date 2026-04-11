@@ -7,7 +7,7 @@
 User Guide
 ===========
 
-This user guide is an overview and explains some of the key features of *OFNP*.
+This user guide provides an overview of *OFNP* and describes its key features.
 
 
 .. image:: https://img.shields.io/github/languages/top/umrlastig/OutdoorFootprintNetworkPipeline
