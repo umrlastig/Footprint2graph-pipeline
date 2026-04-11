@@ -10,6 +10,21 @@ User Guide
 This user guide is an overview and explains some of the key features of *OFNP*.
 
 
+.. image:: https://img.shields.io/github/languages/top/umrlastig/OutdoorFootprintNetworkPipeline
+   :alt: GitHub top language
+   :target: https://github.com/umrlastig/OutdoorFootprintNetworkPipeline
+.. image:: https://www.repostatus.org/badges/latest/wip.svg
+   :alt: WIP – Initial development is in progress, but there has not yet been a stable
+   :target: https://www.repostatus.org/#wip
+.. image:: https://img.shields.io/badge/Licence-MIT-brightgreen.svg?style=flat
+   :alt: Software License
+   :target: https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENCE
+
+|
+
+Table of Contents
+-------------------
+
 .. toctree::
   :maxdepth: 1
 
@@ -17,6 +32,6 @@ This user guide is an overview and explains some of the key features of *OFNP*.
   Pipeline overview <overview>  
   OFNP Installation <install>
   
-
+|
 
 

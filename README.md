@@ -8,14 +8,6 @@
 OFNP is an open-source Python processing pipeline (MIT license) for generating outdoor activity footprint networks from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within a defined spatial and temporal extent. The pipeline includes several components, such as GNSS point map-matching onto a network and trajectory aggregation, both implemented using the Tracklib Python library.
 
 
-
-> Table of Contents
-> - [Documentation](#documentation)
-> - [Acknowledgments](#acknowledgments)
-> - [Development & Contributions](#development--contributions)
-
-
-
 ## Documentation
 
 The online documentation is available at **[ReadTheDocs](https://outdoorfootprintnetworkpipeline.readthedocs.io)**
