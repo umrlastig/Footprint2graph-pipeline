@@ -195,7 +195,7 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     tkl.TrackWriter.writeToFiles(collection, mmtracespath,
                                  id_E=1, id_N=0, id_U=3, id_T=2,
                                  h=1, separator=";", af_names=af_names)
-
+    '''
 
 
     # =========================================================================
@@ -408,7 +408,7 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
 
     print ("Stage 4 finished: mapmatching, aggregation, conflation.")
 
-
+    '''
 
 
 def _fusion (e, TRACES, SEARCH):

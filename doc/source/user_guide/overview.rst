@@ -106,12 +106,19 @@ Découpage et ré-échantillonnage des traces brutes
 ## Script 2: *Création des cartes de pratiques sportives et extrait du réseau*
 
 
-Calculs des cartes de densité, de contraste et binaire
+Calculs des cartes de densité, de contraste et binaire à partir des traces GNSS 
 
 => produit un jeu de traces résolues spatialement à 1 mètre
 
-Filtre morphologique, Vectorisation, Squeletisation
 
+- De la vectorisation on extrait une ligne centrée ≡ arc de la topologie 
+
+avec Filtre morphologique, Vectorisation, Squeletisation
+
+
+
+   
+   
 
 
 

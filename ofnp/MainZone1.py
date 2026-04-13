@@ -5,13 +5,13 @@ import time
 
 from ofnp import segmentation_resample, second_round, load_raw_tracks_split
 from ofnp import density_polygonize
-from ofnp import network
+from ofnp import addTopologyToNetwork
 from ofnp import createNetworkGeom
 from util.config import setupenv
 
 import tracklib as tkl
 
-STAGE = 2
+STAGE = 3
 
 
 """ ======================================================================= """
@@ -74,8 +74,7 @@ G2_SIZE = 30 # 50
 SEUIL_DENSITE = 360  # 15 - 1000
 SEUIL_SURFACE = 1000 # m2 - 50000 - 7000
 
-#r = 2   # Raster resolution
-f = 2   # Cut factor
+
 
 
 """ ======================================================================= """
@@ -147,13 +146,17 @@ if STAGE == 1:
 
 
 if STAGE == 2:
+    #r = 2   # Raster resolution
+    cut_factor = 2   # Cut factor
+    interp_dist = 5
+    clean_dist  = 0
     density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
-                       prefix='PT', rep='resample_grid', f=2)
+                       prefix='PT', rep='resample_grid', cut_factor, interp_dist, clean_dist)
 
 
 
 if STAGE == 3:
-    network(RESPATH, DIST_MIN_ARC)
+    addTopologyToNetwork(RESPATH, DIST_MIN_ARC)
 
 
 
@@ -171,7 +174,8 @@ if STAGE == 5:
     SEUIL_SURFACE = 500
 
     second_round(RESPATH, NB_OBS_MIN, DIST_MAX_2OBS, RESAMPLE_SIZE_GRID, rep)
-    
+
+
     density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
                         prefix='ST', rep=rep)
 

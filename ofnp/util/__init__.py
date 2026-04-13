@@ -3,3 +3,4 @@
 
 from .KitTopology import *
 from .config import *
+from .PlotRes import *

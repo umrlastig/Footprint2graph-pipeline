@@ -29,13 +29,15 @@ from ofnp import Shp2centerline
 
 
 def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, prefix='PT',
-                       rep='resample_grid', f=2):
+                       rep='resample_grid', cut_factor=2, interp_dist=5, clean_dist=0,
+                       verbose=False):
 
-    main_text   = "----------------------------------------------------------------------\r\n"
-    main_text  += "STAGE 2 :                                   \r\n"
-    main_text  += "   - Calcul d’une carte de densité à partir des traces GNSS \r\n"
-    main_text  += "   - De la vectorisation on extrait une ligne centrée ≡ arc de la topologie \r\n"
-    main_text  += "----------------------------------------------------------------------\r\n"
+    #main_text   = "----------------------------------------------------------------------\r\n"
+    #main_text  += "STAGE 2 :                                   \r\n"
+    #main_text  += "   - Calcul d’une carte de densité à partir des traces GNSS \r\n"
+    #main_text  += "   - De la vectorisation on extrait une ligne centrée ≡ arc de la topologie \r\n"
+    #main_text  += "----------------------------------------------------------------------\r\n"
+    main_text  = "Starting rasterization and vectorization\n"
     print(main_text, end='')
 
 
@@ -56,15 +58,11 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
                            'read_all': True})
     
     resampledtracespath = RESPATH + rep + '/'
-    # tracks = tkl.TrackSource(resampledtracespath, fmt)
-    # tracks = tkl.TrackCollection()
-    tracks = tkl.TrackReader.readFromFile(resampledtracespath, fmt)
+    tracks = tkl.TrackReader.readFromFile(resampledtracespath, fmt, verbose=False)
     total = len(tracks)
-    print ('Number files to load: ', total)
+    print ('    Number of tracks to load: ', total)
 
 
-    # bbox = tkl.Bbox(tkl.ENUCoords(947991.025, 6510752.689),
-    #                tkl.ENUCoords(951187.721, 6513143.062))
     bbox = tracks.bbox()
 
     af_algos = ['uid']
@@ -76,7 +74,6 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     rasterG1 = tkl.Raster(bbox=bbox, resolution=resolutionG1, margin=marge,
                     align=tkl.BBOX_ALIGN_LL,
                     novalue=tkl.NO_DATA_VALUE)
-    # print (rasterG1)
 
 
     # Pour chaque algo-agg on crée une grille vide
@@ -108,7 +105,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
 
 
     # compute aggregate
-    print ("Starting to compute aggregates ...")
+    print ("Starting heatmap computation ...")
     rasterG1.computeAggregates()
 
     
@@ -165,12 +162,11 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     
     pathK = respath + 'K_' + prefix + '.asc'
     tkl.RasterWriter.writeMapToAscFile(pathK, grilleK)
-    
-    #plotRaster(pathK, "K", "Turbo")
+
 
 
     # =============================================================================
-    
+
     # On construit une grille vide comme G1
     box = tkl.Bbox(tkl.ENUCoords(rasterK.xmin, rasterK.ymin),
                    tkl.ENUCoords(rasterK.xmax, rasterK.ymax))
@@ -194,12 +190,12 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ("Fin des calculs des cartes de densités, de constraste et binaire.")
+    print ("    Execution time (seconds):", total)
+    print ("    Finished heatmap computation.")
     t0 = t1
 
     # =========================================================================
-
+    print ("Starting morphological opening ...")
 
     pathB             = respath + 'B_' + prefix + '.asc'
     patherosion       = respath + 'erosion_' + prefix + '.tif'
@@ -212,44 +208,54 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     try:
         os.remove(patherosion)
         os.remove(pathdilatation)
-        print(f"Files '{patherosion}' and '{pathdilatation}' deleted successfully.")
+        if verbose:
+            print(f"Files '{patherosion}' and '{pathdilatation}' deleted successfully.")
     except FileNotFoundError:
-        print(f"File '{patherosion}' or '{pathdilatation}' not found.")
+        if verbose:
+            print(f"File '{patherosion}' or '{pathdilatation}' not found.")
 
     try:
         os.remove(respath + 'road_surface_' + prefix + '.shp')
         os.remove(respath + 'road_surface_' + prefix + '.shx')
         os.remove(respath + 'road_surface_' + prefix + '.dbf')
         os.remove(respath + 'road_surface_' + prefix + '.prj')
-        print(f"Files road_surface.shp deleted successfully.")
+        if verbose:
+            print(f"Files road_surface.shp deleted successfully.")
     except FileNotFoundError:
-        print(f"File '{roadsurfpath}' not found.")
+        if verbose:
+            print(f"File '{roadsurfpath}' not found.")
 
     try:
         os.remove(respath + 'road_surface_lissee_' + prefix + '.shp')
         os.remove(respath + 'road_surface_lissee_' + prefix + '.shx')
         os.remove(respath + 'road_surface_lissee_' + prefix + '.dbf')
-        print(f"Files road_surface_lissee.shp deleted successfully.")
+        if verbose:
+            print(f"Files road_surface_lissee.shp deleted successfully.")
     except FileNotFoundError:
-        print(f"File '{roadsurflissepath}' not found.")
+        if verbose:
+            print(f"File '{roadsurflissepath}' not found.")
 
     try:
         os.remove(respath + 'surface_' + prefix + '.shp')
         os.remove(respath + 'surface_' + prefix + '.shx')
         os.remove(respath + 'surface_' + prefix + '.dbf')
         os.remove(respath + 'surface_' + prefix + '.prj')
-        print(f"Files surface.shp deleted successfully.")
+        if verbose:
+            print(f"Files surface.shp deleted successfully.")
     except FileNotFoundError:
-        print(f"File '{roadsurfpath}' not found.")
+        if verbose:
+            print(f"File '{roadsurfpath}' not found.")
 
     try:
         os.remove(RESPATH + 'network/squelette_' + prefix + '.shp')
         os.remove(RESPATH + 'network/squelette_' + prefix + '.shx')
         os.remove(RESPATH + 'network/squelette_' + prefix + '.dbf')
         os.remove(RESPATH + 'network/squelette_' + prefix + '.cpg')
-        print(f"Files '{squelettepath}' deleted successfully.")
+        if verbose:
+            print(f"Files '{squelettepath}' deleted successfully.")
     except FileNotFoundError:
-        print(f"File '{squelettepath}' not found.")
+        if verbose:
+            print(f"File '{squelettepath}' not found.")
 
 
 
@@ -274,14 +280,6 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
 
     # Erosion
     if prefix=='PT':
-        '''
-        mask = np.array([
-            [0,0,1,0,0],
-            [0,1,1,1,0],
-            [1,1,1,1,1],
-            [0,1,1,1,0],
-            [0,0,1,0,0]])
-        '''
         mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
         mapBinaire.filter(mask, np.max)                        # Dilatation
         mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
@@ -293,12 +291,16 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ("Fin de l'ouverture.")
+    print ("    Execution time (seconds):", total)
+    print ("    Finished morphological opening.")
     t0 = t1
+
+
 
     # =========================================================================
     #   Vectorisation dans le layer surface
+
+    print ("Vectorizing ...")
 
     shpDriver = ogr.GetDriverByName("ESRI Shapefile")
     dsSurface = shpDriver.CreateDataSource(surfpath)
@@ -436,45 +438,43 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     #
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ("Fin de la vectorisation.")
+    print ("    Execution time (seconds):", total)
+    print ("    Vectorization completed.")
     t0 = t1
-
 
 
 
     # =========================================================================
     #   Lissage du polygone pour oublier le profil en escalier
 
-    # filtre(roadsurfpath, roadsurflissepath, shpDriver)
-    # dual(roadsurfpath, roadsurflissepath, shpDriver)
-    filtre (roadsurfpath, roadsurflissepath, shpDriver, G1_SIZE, f)
+    print ('Smoothing polygon to remove stair-step artifacts ...')
 
+    smoothingLayer(roadsurfpath, roadsurflissepath, shpDriver, G1_SIZE, cut_factor)
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ("Fin du lissage de road surface.")
+    print ("    Execution time (seconds):", total)
+    print ("    Road surface smoothing completed.")
     t0 = t1
 
 
     # =========================================================================
     #   Squeletisation : centerline
 
-    interp_dist = 5
-    clean_dist  = 0
+    print ('Starting centerline computation ...')
 
-    Shp2centerline(roadsurflissepath, squelettepath, interp_dist, clean_dist)
-    
+    Shp2centerline(roadsurflissepath, squelettepath, interp_dist, clean_dist, verbose=False)
+
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ("Fin du calcul de la center line.")
+    print ("    Execution time (seconds):", total)
+    print ("    Centerline computed.")
+
 
     # =========================================================================
 
-
-    print ("Fin des calculs de vectorisation et squelette.")
+    print ("Stage 2 completed: rasterization and vectorization.")
+    # Fin
 
 
 
@@ -492,7 +492,7 @@ def bbox_to_polygon(minx, maxx, miny, maxy):
 
 
 
-def filtre(roadsurfpath, roadsurflissepath, shpDriver, r, f):
+def smoothingLayer(roadsurfpath, roadsurflissepath, shpDriver, r, f):
 
     dsRoadSurface = ogr.Open(roadsurfpath, 1)
     layerRoadSurface = dsRoadSurface.GetLayer()
@@ -560,7 +560,6 @@ def filtre(roadsurfpath, roadsurflissepath, shpDriver, r, f):
             is_closed = interior[0] == interior[-1]
             if not is_closed or geom.GetArea() <= 0.001:
                 continue
-            print ('une géométrie intérieure')
 
             #x = [p[0] for p in interior]
             #y = [p[1] for p in interior]
@@ -672,122 +671,4 @@ def smoothing(geom, r, f):
     return out_geom
 
 
-'''
-def dual(roadsurfpath, roadsurflissepath, shpDriver):
-    dsRoadSurface = ogr.Open(roadsurfpath, 0)
-    layerRoadSurface = dsRoadSurface.GetLayer()
 
-    srs = layerRoadSurface.GetSpatialRef()
-
-    dsRoadSurfaceLissee = shpDriver.CreateDataSource(roadsurflissepath)
-    layerRoadSurfaceLissee = dsRoadSurfaceLissee.CreateLayer(
-        "road_surface_lissee",
-        srs,
-        geom_type = ogr.wkbPolygon
-    )
-
-    # copier les champs attributaires
-    src_defn = layerRoadSurface.GetLayerDefn()
-    for i in range(src_defn.GetFieldCount()):
-        field_defn = src_defn.GetFieldDefn(i)
-        layerRoadSurfaceLissee.CreateField(field_defn)
-
-    dst_defn = layerRoadSurfaceLissee.GetLayerDefn()
-
-    for feature in layerRoadSurface:
-        geom = feature.GetGeometryRef().Clone()
-        if geom is None:
-            continue
-
-        polygon = ogr.Geometry(ogr.wkbPolygon)
-        for i in range(geom.GetGeometryCount()):
-            ring = geom.GetGeometryRef(i)
-            nbpoints = ring.GetPointCount()
-
-            track = tkl.Track()
-            for p in range(0, nbpoints):
-                track.addObs(tkl.Obs(tkl.ENUCoords(ring.GetPoint(p)[0], ring.GetPoint(p)[1]), tkl.ObsTime()))
-            tdual = track.dual()
-            newring = ogr.Geometry(ogr.wkbLinearRing)
-            for o in tdual:
-                newring.AddPoint(o.position.getX(), o.position.getY())
-            newring.CloseRings()
-            polygon.AddGeometry(newring)
-    
-        # Créer une nouvelle feature
-        dst_feat = ogr.Feature(dst_defn)
-        
-        # Copier les attributs
-        for i in range(dst_defn.GetFieldCount()):
-            dst_feat.SetField(i, feature.GetField(i))
-        
-        # Assigner la géométrie
-        dst_feat.SetGeometry(polygon)
-        
-        # Ajouter au layer
-        layerRoadSurfaceLissee.CreateFeature(dst_feat)
-        
-        dst_feat = None
-
-
-    dsRoadSurface = None
-    dsRoadSurfaceLissee = None
-
-
-
-def filtre(roadsurfpath, roadsurflissepath, shpDriver):
-    dsRoadSurface = ogr.Open(roadsurfpath, 0)
-    layerRoadSurface = dsRoadSurface.GetLayer()
-
-    dsRoadSurfaceLissee = shpDriver.CreateDataSource(roadsurflissepath)
-    layerRoadSurfaceLissee = dsRoadSurfaceLissee.CreateLayer(
-        "Road surface lissee",
-        geom_type = layerRoadSurface.GetGeomType()
-    )
-
-    # copier les champs attributaires
-    src_defn = layerRoadSurface.GetLayerDefn()
-    for i in range(src_defn.GetFieldCount()):
-        field_defn = src_defn.GetFieldDefn(i)
-        layerRoadSurfaceLissee.CreateField(field_defn)
-
-    dst_defn = layerRoadSurfaceLissee.GetLayerDefn()
-
-    for feature in layerRoadSurface:
-        geom = feature.GetGeometryRef()
-
-        polygon = ogr.Geometry(ogr.wkbPolygon)
-        for i in range(geom.GetGeometryCount()):
-            ring = geom.GetGeometryRef(i)
-            nbpoints = ring.GetPointCount()
-            # print ('Nb of vertex : ', nbpoints)
-
-            newring = ogr.Geometry(ogr.wkbLinearRing)
-            newring.AddPoint(ring.GetPoint(0)[0], ring.GetPoint(0)[1])
-            for p in range(1, nbpoints-1):
-                lon = 0.5*ring.GetPoint(p)[0] + 0.25*ring.GetPoint(p-1)[0] + 0.25*ring.GetPoint(p+1)[0]
-                lat = 0.5*ring.GetPoint(p)[1] + 0.25*ring.GetPoint(p-1)[1] + 0.25*ring.GetPoint(p+1)[1]
-                newring.AddPoint(lon, lat)
-            newring.AddPoint(ring.GetPoint(nbpoints-1)[0], ring.GetPoint(nbpoints-1)[1])
-            polygon.AddGeometry(newring)
-    
-        # Créer une nouvelle feature
-        dst_feat = ogr.Feature(dst_defn)
-        
-        # Copier les attributs
-        for i in range(dst_defn.GetFieldCount()):
-            dst_feat.SetField(i, feature.GetField(i))
-        
-        # Assigner la géométrie
-        dst_feat.SetGeometry(polygon)
-        
-        # Ajouter au layer
-        layerRoadSurfaceLissee.CreateFeature(dst_feat)
-        
-        dst_feat = None
-
-
-    dsRoadSurface = None
-    dsRoadSurfaceLissee = None
-
-'''

@@ -12,13 +12,12 @@ import time
 
 import tracklib as tkl
 
-from ofnp import createNetwork, filtreNoeudSimple, deleteSmallEdge
-from ofnp import removeDuplicateGeometries
+from ofnp import createNetwork
 from ofnp import skeleton_smoothing
 
 
 
-def network(RESPATH, DIST_MIN_ARC, prefix='PT'):
+def addTopologyToNetwork(RESPATH, DIST_MIN_ARC, prefix='PT'):
 
     t0 = time.time()
 
@@ -26,8 +25,11 @@ def network(RESPATH, DIST_MIN_ARC, prefix='PT'):
     tolerance     = 0.1    # 0.05
     seuil_doublon = 0.1
 
+    print("Starting topology creation for the network")
 
-    # =============================================================================
+
+
+    # =========================================================================
     #          CHARGEMENT DU SQUELETTE
 
     collection = tkl.TrackCollection()
@@ -43,95 +45,62 @@ def network(RESPATH, DIST_MIN_ARC, prefix='PT'):
                     if track.length() < tolerance/2:
                         continue
                     collection.addTrack(track)
+            if geom.geom_type == "LineString":
+                print ('ohoh')
+
+    input_file = str(RESPATH) + 'network/edgegeom.csv'
+    with open(input_file, "w") as f:
+        for track in collection:
+            f.write(track.toWKT() + "\n")
 
 
-    print ('Nb lignes : ', collection.size())
-    print ('Fin chargement des données 1/4.')
+    print ('    Number of edges in the smoothed skeleton:', collection.size())
+    print ('    Finished loaded skeleton.')
 
 
 
     # =============================================================================
     #             CONSTRUCTION RESEAU
     #
-    tkl.NetworkReader.counter = 1
-    
-    network = createNetwork(collection, tolerance)
+    # tkl.NetworkReader.counter = 1
+    # network = createNetwork(collection, tolerance)
+
+    print ('Starting topology creation ...')
+
+    output_file = str(RESPATH) + 'network/squelette_topology_' + str(prefix) + '.csv'
+    tkl.Topology.create_topology(input_file, '2154', output_file)
+
+    fmt = tkl.NetworkFormat({
+           "pos_edge_id": 0,
+           "pos_source": 1,
+           "pos_target": 2,
+           "pos_wkt": 3,
+           "srid": "ENU",
+           "separator": ",",
+           "header": 1})
+    network = tkl.NetworkReader.readFromFile(output_file, fmt, verbose=False)
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ('Fin construction du réseau 2/4.')
+    print ("    Execution time (seconds):", total)
+    print ('    Finished created topology.')
     t0 = t1
 
 
-    # =============================================================================
-    #         SUPPRIME LES ARCS EN DOUBLONS
-    #
-    
-    #removeDuplicateGeometries(network, seuil_doublon)
-    #print ('Fin suppression des arcs en doublon 3/4.')
+
 
 
     # =============================================================================
     #          SUPPRIME LES parties crochues du squelette
     #
 
-
     network.simplify(0, tkl.MODE_SIMPLIFY_REM_POS_DUP, verbose=False)
+    print ('Finished removing hooked parts of the skeleton.')
 
-    #for idx in progressbar.progressbar(network.getEdgesId()):
-    #    network.getEdge(idx).geom = skeleton_smoothing(
-    #        network.getEdge(idx).geom, 1, 20)
-
-    print ('Fin suppression des parties crochues du squelette 3/4.')
-
-
-
-    # =============================================================================
-    #         FUSION DES ARCS SIMPLES ET SUPPRIME LES PETITS ARCS
-    #
-    #TE = list(map(int, network.getIndexEdges()))
-    #tkl.NetworkReader.counter = max(TE) + 1
-
-
-    filtreNoeudSimple(network)
-
-
-    cpt = 0
-    nb = 1000
-    while nb > 10 and cpt < 10:
-        nb = deleteSmallEdge(network, DIST_MIN_ARC)
-        print ('    nb arcs supprimés: ', nb)
-        cpt += 1
-    filtreNoeudSimple(network)
-
-    '''
-    cpt = 0
-    nb = 1000
-    while nb > 10 and cpt < 10:
-        nb = deleteSmallEdge(network, DIST_MIN_ARC)
-        print ('    nb arcs supprimés: ', nb)
-        cpt += 1
-    filtreNoeudSimple(network)
-    '''
-
-    print ('Fin suppression des petis arcs 4/4.')
-
-
-
-    network.simplify(0, tkl.MODE_SIMPLIFY_REM_POS_DUP, verbose=False)
     network.simplify(5, tkl.MODE_SIMPLIFY_DOUGLAS_PEUCKER, verbose=False)
-    print ('Fin simplification 5/5.')
+    print ('Finished simplification of the skeleton.')
 
 
-    # =========================================================================
-
-
-    t1 = time.time()
-    total = t1-t0
-    print ("Temps d'exécution en s:", total)
-    print ('Fin construction et nettyage du squelette.')
-    t0 = t1
 
 
 
@@ -145,7 +114,7 @@ def network(RESPATH, DIST_MIN_ARC, prefix='PT'):
     netwokpath = RESPATH + 'network/reseau_' + prefix + '.csv'
     tkl.NetworkWriter.writeToCsv(network, netwokpath)
 
-    print ("Fin de la construction du réseau.")
+    print ("Stage 3 completed: adding topology to the skeleton.")
 
 
     

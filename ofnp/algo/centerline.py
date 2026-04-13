@@ -34,7 +34,7 @@ class Centerline(object):
         self.dist = abs(dist)
         self.clean_dist = clean_dist
 
-    def createCenterline(self):
+    def createCenterline(self, verbose=True):
         """
         Calculates the centerline of a polygon.
 
@@ -50,42 +50,48 @@ class Centerline(object):
         minx = int(min(self.inputGEOM.envelope.exterior.xy[0]))
         miny = int(min(self.inputGEOM.envelope.exterior.xy[1]))
 
-        print("\r\n*["+str(datetime.datetime.now())+"]  Upsampling polygon borders...")
+        if verbose:
+            print("\r\n*["+str(datetime.datetime.now())+"]  Upsampling polygon borders...")
         border = np.array(self.densifyBorder(self.inputGEOM, minx, miny))
 
         vor = Voronoi(border)
         vertex = vor.vertices
 
-        print("\r\n*["+str(datetime.datetime.now())+"]  Computing polygon skeleton...")
+        if verbose:
+            print("\r\n*["+str(datetime.datetime.now())+"]  Computing polygon skeleton...")
         lst_lines = []
         Nvor = len(list(vor.ridge_vertices))
-        bar = progressbar.ProgressBar(max_value = Nvor)
+        if verbose:
+            bar = progressbar.ProgressBar(max_value = Nvor)
         for j, ridge in enumerate(vor.ridge_vertices):
-            bar.update(j)     
+            if verbose:
+                bar.update(j)
             if -1 not in ridge:
                 line = LineString([
                     (vertex[ridge[0]][0] + minx, vertex[ridge[0]][1] + miny),
                     (vertex[ridge[1]][0] + minx, vertex[ridge[1]][1] + miny)])
                 if len(line.coords[0]) > 1:
                     lst_lines.append(line)
-            
-        
-        bar.finish()
-        
+        if verbose:
+            bar.finish()
+
+
         input_geom_buffer = shapely.buffer(self.inputGEOM, self.clean_dist)
 
-        print("\r\n*["+str(datetime.datetime.now())+"]  Filtering skeleton to form center line...")            
+        if verbose:
+            print("\r\n*["+str(datetime.datetime.now())+"]  Filtering skeleton to form center line...")            
         lst_lines_out = []
-        bar = progressbar.ProgressBar(max_value = len(lst_lines))
+        if verbose:
+            bar = progressbar.ProgressBar(max_value = len(lst_lines))
         for i in range(len(lst_lines)):
-            bar.update(i)   
-            
+            if verbose:
+                bar.update(i)
             if not (shapely.contains(input_geom_buffer, lst_lines[i])):
                 continue            
-  
             lst_lines_out.append(lst_lines[i])
-             
-        bar.finish()
+        if verbose:
+            bar.finish()
+
         return unary_union(lst_lines_out)
         
 
@@ -168,33 +174,39 @@ class Centerline(object):
 # =================================================================================================
 class Shp2centerline(object):
 
-    def __init__(self, inputSHP, outputSHP, dist, clean_dist):
+    def __init__(self, inputSHP, outputSHP, dist, clean_dist, verbose=True):
         self.inshp = inputSHP
         self.outshp = outputSHP
         self.dist = abs(dist)
         self.clean_dist = clean_dist
+        self.verbose = verbose
         self.dct_polygons = {}
         self.dct_centerlines = {}
 
         # ------------------------------------------------------------------------
         # Load polygon from input file
         # ------------------------------------------------------------------------
-        print('*['+str(datetime.datetime.now())+']  Importing polygons from: [' + self.inshp + ']... ', end='')
+        if self.verbose:
+            print('*['+str(datetime.datetime.now())+']  Importing polygons from: [' + self.inshp + ']... ', end='')
         self.importSHP()
-        print("done\r\n")
+        if self.verbose:
+            print("done\r\n")
         
         # ------------------------------------------------------------------------
         # Computing center line
-        # ------------------------------------------------------------------------    
-        print('*['+str(datetime.datetime.now())+']  Center line computation')
+        # ------------------------------------------------------------------------
+        if self.verbose:
+            print('*['+str(datetime.datetime.now())+']  Center line computation')
         self.run()
         
         # ------------------------------------------------------------------------
         # Output center line
-        # ------------------------------------------------------------------------  
-        print('\r\n*['+str(datetime.datetime.now())+']  Exporting center line to: [' + self.outshp+ ']... ', end='')
+        # ------------------------------------------------------------------------
+        if self.verbose:
+            print('\r\n*['+str(datetime.datetime.now())+']  Exporting center line to: [' + self.outshp+ ']... ', end='')
         self.export2SHP()
-        print("done")
+        if self.verbose:
+            print("done")
 
     def run(self):
         """
@@ -209,7 +221,7 @@ class Shp2centerline(object):
             poly_geom = self.dct_polygons[key]
             centerlineObj = Centerline(poly_geom, self.dist, self.clean_dist)
 
-            self.dct_centerlines[key] = centerlineObj.createCenterline()
+            self.dct_centerlines[key] = centerlineObj.createCenterline(self.verbose)
 
     def importSHP(self):
         """

@@ -7,26 +7,49 @@
 Introduction
 =============
 
+
+
+
+
+.. list-table::
+   :widths: 50 50
+
+   * - .. figure:: ../img/identifier_oui.png
+          :width: 60%
+
+          Human outdoor activity footprint network
+
+     - .. figure:: ../img/identifier_non.png
+          :width: 100%
+
+          Trajectories do not always form a path
+
+
 The outdoor footprint network is defined by :
 
 * a topology graph G (V, E) : a set of vertex V and a set of edges E, E ⊆ V x V non oriented
 * a geometry for each edge E defined as as sequence of vertics (x, y, z) and represents accurately the common path followed by all the individual sample trajectories (i.e. accurate aggregate trajectories)
 
 
-<p align="center">
-<table style="border:none;border:0;width:60%"><tr>
-  <td align="center" style="width:30%">
-    <img width="200px" src="https://github.com/IntForOut/HikersFootprint/blob/main/img/input.png" />
-    <br/><label>Raw GNSS trajectories</label>
-  </td>
-  <td style="padding:16px;">
-    <img width="200px" src="https://github.com/IntForOut/HikersFootprint/blob/main/img/IT2.png" />
-    <br/><label>Outdoor Footprint Network</label>
-  </td>
-</tr></table>
-</p>
+Soit un ensemble de trajectoires, où chaque trajectoire est définie comme un ensemble de n points ordonnés. On définit une trace agrégée, comme la meilleure représentation géométrique du jeu de trajectoires suivant exactement la même route partant d’une origine vers une destination.
+
+
+
+
+.. list-table::
+   :widths: 50 50
+
+   * - .. figure:: ../img/input.png
+          :width: 100%
+
+          Raw GNSS trajectories
+     - .. figure:: ../img/IT2.png
+          :width: 100%
+
+          Outdoor Footprint Network
 
 The two figures above illustrate the pipeline input (left) and output (right).
+
 
 
 
