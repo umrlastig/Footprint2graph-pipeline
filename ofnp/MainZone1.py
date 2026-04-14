@@ -146,7 +146,7 @@ if STAGE == 1:
 
 
 if STAGE == 2:
-    #r = 2   # Raster resolution
+    #r = 2           # Raster resolution
     cut_factor = 2   # Cut factor
     interp_dist = 5
     clean_dist  = 0

@@ -20,22 +20,13 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
                        pathraccord='raccord'):
 
     t0 = time.time()
-
-    main_text   = "--------------------------------------------------------------------------------------\r\n"
-    main_text  += " ETAPE 4 :                                                               \r\n"
-    main_text  += "   - Attribue les points des traces brutes à chaque arc de la topologie \r\n"
-    main_text  += "   - Reconstruit les bons morceaux de traces candidats pour chaque arc de la topologie\r\n"
-    main_text  += "   - Agrégation des morceaux de traces\r\n"
-    main_text  += "   - Conflation des traces fusionnées afin d’obtenir un réseau de mobilité\r\n"
-    main_text  += "--------------------------------------------------------------------------------------\r\n"
-    main_text  += "--------------------------------------------------------------------------------------\r\n"
-    print (main_text, end='')
+    print("Starting map-matching, aggregation, and conflation of GNSS trajectories.")
 
 
     # =========================================================================
     #    Lecture du réseau
     #
-    print ('Loading network ......')
+    print ('Loading network ...')
     fmt = tkl.NetworkFormat({
            "pos_edge_id": 0,
            "pos_source": 1,
@@ -50,13 +41,13 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     
     print ('    Number of edges = ', len(network.EDGES))
     print ('    Number of nodes = ', len(network.NODES))
-    print (' Longueur du réseau = ', network.totalLength())
+    print ('    Total segment length of the network = ', network.totalLength())
 
     
     # =========================================================================
     #   Lecture des traces découpées et ré-échantillonnées.
     #
-    print ('Loading collection of tracks ......')
+    print ('Loading collection of tracks ...')
     fmt = tkl.TrackFormat({'ext': 'CSV',
                            'srid': 'ENU',
                            'id_E': 1,'id_N': 0, 'id_U': 3,'id_T': 2,
@@ -69,6 +60,9 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     collection2 = tkl.TrackReader.readFromFile(tracespath, fmt)
     print ('    Number of tracks:', collection2.size())
 
+
+    # =========================================================================
+
     collection = tkl.TrackCollection()
     for trace in collection2:
         num = trace.getObsAnalyticalFeature('num', 0)
@@ -79,26 +73,19 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
         trace.uid = user_id
         trace.tid = str(num) + '-' + version
         #if str(trace.tid) == '6732043.0-v1' or str(trace.tid) == '6732043.0-v1':
-        #if str(trace.tid) == '253623.0-v1':
-        #if str(trace.tid) == '8195702.0-v1':
-        #if str(trace.tid) == '14971357.0-v2':
-        #if str(trace.tid) == '8195702.0-v1':
-        #if str(trace.tid) == '12449457.0-v1':
-        #print (trace.toWKT())
-        #if str(trace.tid) == '2386441.0-v1':
-        # print (trace.toWKT())
         collection.addTrack(trace)
     
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
+    print ("    Execution time (seconds):", total)
     t0 = t1
 
 
     # =========================================================================
     #     Map-matching
     #
+    print ('Starting map-matching ...')
 
     si = tkl.SpatialIndex(network, verbose=False)
     network.spatial_index = si
@@ -107,14 +94,13 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     network.prepare()
 
     # Map track on network
-    print ('Launching Map-matching ...')
     tkl.mapOnNetwork(collection, network, search_radius=SEARCH, debug=False)
-    print ('Map-matching ended')
+    print ('    Map-matching ended.')
 
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
+    print ("    Execution time (seconds):", total)
     t0 = t1
 
 
@@ -185,9 +171,8 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
                 track.setObsAnalyticalFeature('mmtype', j, 'TARGET')
                 track.setObsAnalyticalFeature('idedge', j, idnode)
 
-    print ('Map-matching results restructuring completed.')
+    print ('    Map-matching results restructuring completed.')
     #print (MM['9476'])
-
 
 
     af_names = ['num', 'track_id', 'user_id', 'hmm_inference', 'mmtype', 'idedge']
@@ -195,7 +180,8 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     tkl.TrackWriter.writeToFiles(collection, mmtracespath,
                                  id_E=1, id_N=0, id_U=3, id_T=2,
                                  h=1, separator=";", af_names=af_names)
-    '''
+    print ('    Map-matching results exported.')
+
 
 
     # =========================================================================
@@ -205,6 +191,8 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     #  On enregistre le MM dans un fichier CSV
 
     # EDGE_ID;TRACK_ID;WKT
+
+    print ('Starting construction of candidate trajectory segments for each topology edge ...')
 
     mmpath = RESPATH + 'mapmatch/resultmm_' + prefix + '.csv'
     allmmpath = RESPATH + 'mapmatch/resultallmm_' + prefix + '.csv'
@@ -281,12 +269,13 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
     f1.close()
     f2.close()
 
-    print ("Mapmatched step completed")
+    print ("    Segment construction completed.")
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
+    print ("    Execution time (seconds):", total)
     t0 = t1
+
 
     # =========================================================================
     #     Fusion
@@ -296,7 +285,6 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
 
     geompath = RESPATH + 'geometry/' + pathfusion + '/'
     
-
     # Aggregation with DTW distance
     fusions = tkl.TrackCollection()
     edgeprevious = -1
@@ -319,10 +307,7 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
 
             if edgeprevious != edgeid:
                 if edgeprevious != -1 and len(TRACES) > 1:
-
-
-
-                    print ("Fusion pour le edge :", edgeprevious)
+                    print ("    Aggregation for arc number:", edgeprevious)
                     central = _fusion(e, TRACES, SEARCH)
                     if central is not None:
                         central.createAnalyticalFeature('edgeid', edgeprevious)
@@ -342,8 +327,6 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
 
                 # print ('Edge ', edgeid)
 
-
-
             trackid = line[1]
             wkt = line[2]
 
@@ -355,9 +338,8 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
 
 
     # dernière trace
-
     if len(TRACES) > 1:
-        print ("Dernière fusion pour le edge :", edgeprevious)
+        print ("    Aggregation for arc number:", edgeprevious)
         central = _fusion(e, TRACES, SEARCH)
         if central is not None:
             central.createAnalyticalFeature('edgeid', edgeprevious)
@@ -372,20 +354,22 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
             f.close()
 
 
-    print ('Number of aggregations: ', fusions.size())
-    print ("Aggregation process finished.")
+    print ('    Number of aggregations:', fusions.size())
+    print ("    Aggregation process finished.")
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
+    print ("    Execution time (seconds):", total)
     t0 = t1
 
 
     # =========================================================================
     # Raccord
 
+    print ("Starting conflation ...")
 
-    conflated = conflateOnNetwork(fusions, network, threshold=50, h=30)
+    conflated = conflateOnNetwork(fusions, network, threshold=50, h=30,
+                                  verbose=False)
 
     # enregistrer conflation
     raccordpath = RESPATH + 'geometry/' + pathraccord + '/'
@@ -398,17 +382,20 @@ def createNetworkGeom (RESPATH, SEARCH, NB_OBS_MIN, DIST_MAX_2OBS, prefix='PT',
             f.write(str(segment.tid) + ";" + segment.toWKT() + "\n")
             f.close()
 
-
-    print ("Conflation process finished.")
+    print ("    Conflation process finished.")
 
     t1 = time.time()
     total = t1-t0
-    print ("Temps d'exécution en s:", total)
+    print ("    Execution time (seconds):", total)
     t0 = t1
 
-    print ("Stage 4 finished: mapmatching, aggregation, conflation.")
 
-    '''
+    # =========================================================================
+    # Fin
+
+    print ("Stage 4 completed: map-matching, aggregation, and conflation.")
+
+    
 
 
 def _fusion (e, TRACES, SEARCH):
@@ -431,25 +418,19 @@ def _fusion (e, TRACES, SEARCH):
 
 
     NB = candidats.size()
-    print ('    Nombre de traces à fusionner (avant le tirage):', NB)
+    # print ('        Number of traces to merge (before sampling):', NB)
     if NB > 30:
         collection = candidats.randNTracks(min(NB, 30))
     else:
         collection = candidats
 
-    '''
-    if collection is None:
-        return None
-    if not isinstance(collection, tkl.TrackCollection):
-        return None
-    if collection.size() <= 0:
-        return None
-    '''
 
-    print ('    Number of candidates in the aggregation process:', collection.size())
+    # print ('        Number of candidates in the aggregation process:', collection.size())
+    print ('        Number of candidate tracks / number of sampled tracks',
+           NB, "/", collection.size())
 
     if collection.size() > 1:
-        print ('Launching Aggregation ......')
+        # print ('        Launching Aggregation ...')
         centralDTW = tkl.fusion(collection,
                              master=tkl.MODE_MASTER_MEDIAN_LEN,
                              dim=2,
@@ -458,11 +439,11 @@ def _fusion (e, TRACES, SEARCH):
                              represent_method=tkl.MODE_REP_BARYCENTRE,
                              agg_method=tkl.MODE_AGG_MEDIAN,
                              constraint=False,
-                             verbose=True,
+                             verbose=False,
                              iter_max=25,
                              recursive=rec,
                              cv=cv)
-        print ('Aggregation ended')
+        # print ('        Aggregation ended.')
         return centralDTW
     elif candidats.size() == 1:
         centralDTW = candidats.getTrack(0)

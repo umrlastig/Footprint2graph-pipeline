@@ -3,13 +3,28 @@
 
 import tracklib as tkl
 
+import csv
+import os
+import re
+
+import matplotlib.pyplot as plt
+
 import fiona
 import geopandas as gpd
+import rasterio
+from rasterio.plot import show
 from shapely.geometry import LineString, MultiLineString
 from shapely.geometry import shape as geom_shape
 
 
-def matPlotRaster(pathres, filename, append):
+
+
+def maPlotRasterTiff(pathres, filename, append):
+    with rasterio.open(pathres + filename) as src:
+        show(src, ax=append, cmap="Blues")  # Greys
+
+
+def matPlotRasterShp(pathres, filename, append):
     gdf = gpd.read_file(pathres + filename)
     gdf.plot(ax=append)
 
@@ -32,88 +47,112 @@ def matPlotShapefile(pathres, filename, append):
 
 
 
-def plotMM(pathres):
+def plotMM(pathres, append):
     collection = tkl.TrackCollection()
-    mmtrackpath = respath + '/mapmatch/tmm/'
+    mmtrackpath = pathres + '/mapmatch/tmm/'
     for mmfilename in os.listdir(mmtrackpath):
+        #N;E;time;U;num;track_id;user_id;hmm_inference;mmtype;idedge
         fmt = tkl.TrackFormat({'ext': 'CSV',
-                               'srid': 'ENU',
-                               'id_E': 1,'id_N': 0, 'id_U': 3,'id_T': 2,
-                               'separator': ';',
-                               'header': 0,
-                               'comment': '#',
-                               'read_all': True})
+                                   'srid': 'ENU',
+                                   'id_E': 1,'id_N': 0, 'id_U': 3,'id_T': 2,
+                                   'separator': ';',
+                                   'header': 0,
+                                   'comment': '#',
+                                   'read_all': True})
         trace = tkl.TrackReader.readFromFile(mmtrackpath + mmfilename, fmt)
-        collection.addTrack(trace)
-    '''
-    for i in range(collection.size()):
-        track = collection.getTrack(i)
-        pkid = track.tid
-        # print (pkid)
+        for j in range(trace.size()):
+                obs = trace.getObs(j)
+                x = float(obs.position.getX())
+                y = float(obs.position.getY())
 
-        num = track.getObsAnalyticalFeature('num', 0)
-        track_id = track.getObsAnalyticalFeature('track_id', 0)
-        user_id = track.getObsAnalyticalFeature('user_id', 0)
+                s = trace["hmm_inference", j]
+                hmminf = list(map(float, re.findall(r"[0-9.]+", s)))
+                ds = float(hmminf[4])
+                dt = float(hmminf[5])
+                edgeid = trace["idedge", j]
+    
+                if str(trace["mmtype", j]) == "NOT":
+                    # pas de MM
+                    append.scatter(x, y, color='red', s=10, label='Not Map-matched')
+                if str(trace["mmtype", j]) == "EDGE":
+                    xmm = hmminf[0]
+                    ymm = hmminf[1]
+                    append.scatter(xmm, ymm, color='green', s=10, label='Map-matched on edge')
+                if str(trace["mmtype", j]) == "SOURCE" or str(trace["mmtype", j]) == "TARGET":
+                    xmm = hmminf[0]
+                    ymm = hmminf[1]
+                    append.scatter(xmm, ymm, color='blue', s=10, label='Map-matched on node')
 
-        for j in range(track.size()):
-            obs = track.getObs(j)
-            x = float(obs.position.getX())
-            y = float(obs.position.getY())
-            pt1 = QgsPointXY(x, y)
-            g1 = QgsGeometry.fromPointXY(pt1)
+        # Supprime les doublons dans la légende
+        handles, labels = append.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        append.legend(by_label.values(), by_label.keys())
 
-            s = track["hmm_inference", j]
-            hmminf = list(map(float, re.findall(r"[0-9.]+", s)))
-            ds = float(hmminf[4])
-            dt = float(hmminf[5])
-            edgeid = track["idedge", j]
 
-            # print (track["mmtype", j])
 
-            if str(track["mmtype", j]) == "NOT":
-                # pas de MM
-                attrs1 = [str(pkid), j, x, y, -1, -1, 'NOTMM', num, track_id, user_id]
-                fet = QgsFeature()
-                fet.setAttributes(attrs1)
-                fet.setGeometry(g1)
-                pr.addFeature(fet)
-            if str(track["mmtype", j]) == "EDGE":
-                xmm = hmminf[0]
-                ymm = hmminf[1]
-                pt2 = QgsPointXY(xmm, ymm)
-                g2 = QgsGeometry.fromPointXY(pt2)
+def plotSegmentsConstruction(pathres, ax, squelette):
+    mmpath = pathres + '/mapmatch/resultmm_PT.csv'
 
-                attrs1 = [str(pkid), j, x, y, float(xmm), float(ymm), 'ARC', num, track_id, user_id]
-                fet = QgsFeature()
-                fet.setAttributes(attrs1)
-                fet.setGeometry(g2)
-                pr.addFeature(fet)
+    n = len(squelette.EDGES)
+    cmap = plt.cm.get_cmap('tab20', n)
+    colors = [cmap(i) for i in range(n)]
 
-                line = QgsGeometry.fromPolylineXY([pt1, pt2])
-                fet = QgsFeature()
-                fet.setGeometry(line)
-                attrs1 = [str(pkid), str(edgeid), ds, dt, num, track_id, user_id]
-                fet.setAttributes(attrs1)
-                prMM.addFeature(fet)
+    TRACES = {}
+    with open(mmpath, 'r', newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=';', quotechar='|')
+        for row in spamreader:
+            edgeid   = row[0]
+            wkt      = row[2]
+            if wkt == 'WKT':
+                continue
 
-            if str(track["mmtype", j]) == "SOURCE" or str(track["mmtype", j]) == "TARGET":
-                xmm = hmminf[0]
-                ymm = hmminf[1]
-                pt2 = QgsPointXY(xmm, ymm)
-                g2 = QgsGeometry.fromPointXY(pt2)
+            if not edgeid in TRACES:
+                TRACES[edgeid] = []
+            trace = tkl.TrackReader.parseWkt(wkt, 'ENU')
+            TRACES[edgeid].append(trace)
+    
+    for i, edgeid in enumerate(TRACES.keys()):
+        color = colors[i]
+        for trace in TRACES[edgeid]:
+            ax.plot(trace.getX(), trace.getY(), color=color, linestyle='-')
+            
+    squelette.plot('k-', nodes='ko', size=0.8, append=ax)
 
-                attrs1 = [str(pkid), j, x, y, float(xmm), float(ymm), 'NOEUD', num, track_id, user_id]
-                fet = QgsFeature()
-                fet.setAttributes(attrs1)
-                fet.setGeometry(g2)
-                pr.addFeature(fet)
 
-                line = QgsGeometry.fromPolylineXY([pt1, pt2])
-                fet = QgsFeature()
-                fet.setGeometry(line)
-                attrs1 = [str(pkid), str(edgeid), ds, dt, num, track_id, user_id]
-                fet.setAttributes(attrs1)
-                prMM.addFeature(fet)
-    '''
+
+def plotAggregation(pathres, ax):
+    fusionpath = pathres + '/geometry/fusion/'
+    for fusionfilename in os.listdir(fusionpath):
+        with open(fusionpath + fusionfilename, 'r') as file:
+            line = file.readline()
+            line = file.readline()
+            wkt = line.split(";")[2].strip()
+            if wkt == 'WKT':
+                continue
+    
+            trace = tkl.TrackReader.parseWkt(wkt, 'ENU')
+            ax.plot(trace.getX(), trace.getY(), color='red', linestyle='-')
+
+
+def plotConflation(pathres, ax):
+    raccordpath = pathres + '/geometry/raccord/'
+    for raccordfilename in os.listdir(raccordpath):
+        with open(raccordpath + raccordfilename, 'r') as file:
+            line = file.readline()
+            line = file.readline()
+            wkt = line.split(";")[1].strip()
+            if wkt == 'WKT':
+                continue
+    
+            trace = tkl.TrackReader.parseWkt(wkt, 'ENU')
+            ax.plot(trace.getX(), trace.getY(), color='green', linestyle='-')
+
+
+
+
+
+
+
+
 
 
