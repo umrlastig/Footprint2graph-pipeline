@@ -7,18 +7,19 @@
 End-to-End Examples
 ====================
 
-With Simulated and Real Trajectories
---------------------------------------
 
-Ces deux exemples permettent de tester le pipeline avec des petits jeux de données afin de s'approprier les différentes étapes ainsi que les paramètres utilisés. Le premier utilise la génération de traces simulées à partir d'un réseau alors que le deuxième utilise des traces saisies sur le terrain avec l'application Visorando dans le bois de Vincennes.
+With Simulated Trajectories
+----------------------------
+
+This example is a quick way to get started with *OFNP*. It lets users test the pipeline and become familiar with its main steps and parameters. It relies on the generation of simulated trajectories from a network, making it easy and fast to experiment with as soon as a network is available in the form of a list of edge geometries.
 
 
 .. nbgallery::
-    :name: examples-gallery
+    :name: quickstart-gallery
     :glob:
 
     Simulated-Traj_Example
-    Real-World_Example
+
 
 
 Code for Generating Published Datasets
