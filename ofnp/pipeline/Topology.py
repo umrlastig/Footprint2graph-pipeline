@@ -12,9 +12,7 @@ import time
 
 import tracklib as tkl
 
-from ofnp import createNetwork
 from ofnp import skeleton_smoothing
-
 
 
 def addTopologyToNetwork(RESPATH, DIST_MIN_ARC, prefix='PT'):
@@ -96,6 +94,12 @@ def addTopologyToNetwork(RESPATH, DIST_MIN_ARC, prefix='PT'):
 
     network.simplify(0, tkl.MODE_SIMPLIFY_REM_POS_DUP, verbose=False)
     print ('Finished removing hooked parts of the skeleton.')
+
+
+    for idx in progressbar.progressbar(network.getEdgesId()):
+        network.getEdge(idx).geom = skeleton_smoothing(
+            network.getEdge(idx).geom, 1, 5)
+
 
     network.simplify(5, tkl.MODE_SIMPLIFY_DOUGLAS_PEUCKER, verbose=False)
     print ('Finished simplification of the skeleton.')

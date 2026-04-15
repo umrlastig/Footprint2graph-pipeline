@@ -8,13 +8,13 @@ import tracklib as tkl
 # Filtre de Fourier coupe-bande sur une géométrie
 # --------------------------------------------------------------------------------------
 # Inputs:
-#    - geom     :   trace ou edge en entrÃ©e
+#    - geom     :   trace ou edge en entrée
 #    - wl_inf   : longueur d'onde de coupure infÃ©rieure (en mÃ¨tres) 
 #    - wl_sup   : longueur d'onde de coupure supÃ©rieure (en mÃ¨tres) 
 # Output: trace filtrÃ©e
 # --------------------------------------------------------------------------------------
 def skeleton_smoothing(geom, wl_inf, wl_sup):
-	
+    
     N = len(geom)
     
     # Centrage du signal
