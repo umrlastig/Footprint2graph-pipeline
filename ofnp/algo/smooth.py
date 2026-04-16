@@ -4,15 +4,15 @@
 import tracklib as tkl
 
 
-# --------------------------------------------------------------------------------------
-# Filtre de Fourier coupe-bande sur une géométrie
-# --------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+#   Filtre de Fourier coupe-bande sur une géométrie
+# -----------------------------------------------------------------------------
 # Inputs:
-#    - geom     :   trace ou edge en entrée
-#    - wl_inf   : longueur d'onde de coupure infÃ©rieure (en mÃ¨tres) 
-#    - wl_sup   : longueur d'onde de coupure supÃ©rieure (en mÃ¨tres) 
-# Output: trace filtrÃ©e
-# --------------------------------------------------------------------------------------
+#    - geom     : trace ou edge en entrée
+#    - wl_inf   : longueur d'onde de coupure inférieure (en mètres)
+#    - wl_sup   : longueur d'onde de coupure supérieure (en mètres)
+# Output: trace filtrée
+# -----------------------------------------------------------------------------
 def skeleton_smoothing(geom, wl_inf, wl_sup):
     
     N = len(geom)
@@ -23,7 +23,7 @@ def skeleton_smoothing(geom, wl_inf, wl_sup):
     cx = c0.E; cy = c0.N
     geom.translate(-cx, -cy)
     
-    # Sauvegarde des extrÃ©mitÃ©s
+    # Sauvegarde des extrémités
     ci = geom[0]
     cf = geom[-1]
     
@@ -43,7 +43,7 @@ def skeleton_smoothing(geom, wl_inf, wl_sup):
         out[i, "x"] = signal_low_freq[i, "x"] + signal_hgh_freq[i, "x"]
         out[i, "y"] = signal_low_freq[i, "y"] + signal_hgh_freq[i, "y"] 
         
-    # Reconstruction des extrÃ©mitÃ©s 
+    # Reconstruction des extrémités
     out[0]  = ci
     out[-1] = cf   
         
@@ -51,3 +51,6 @@ def skeleton_smoothing(geom, wl_inf, wl_sup):
     out.translate(cx, cy)
     
     return out
+
+
+

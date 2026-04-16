@@ -15,6 +15,7 @@ import math
 import os
 import time
 from scipy.ndimage import maximum_filter
+from skimage.morphology import remove_small_holes, remove_small_objects
 
 # import matplotlib.pyplot as plt
 
@@ -24,11 +25,13 @@ import numpy as np
 from osgeo import gdal, ogr, osr
 from ofnp import Shp2centerline
 
+from skimage.measure import label, regionprops
+import numpy as np
 
 
 
-
-def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, prefix='PT',
+def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
+                       closing = True, prefix='PT',
                        rep='resample_grid', cut_factor=2, interp_dist=5, clean_dist=0,
                        verbose=False):
 
@@ -200,6 +203,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     pathB             = respath + 'B_' + prefix + '.asc'
     patherosion       = respath + 'erosion_' + prefix + '.tif'
     pathdilatation    = respath + 'dilatation_' + prefix + '.tif'
+    pathrien          = respath + 'rien_' + prefix + '.tif'
     surfpath          = respath + 'surface_' + prefix + '.shp'
     roadsurfpath      = respath + 'road_surface_' + prefix + '.shp'
     roadsurflissepath = respath + 'road_surface_lissee_' + prefix + '.shp'
@@ -259,6 +263,8 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
 
 
 
+
+
     # =============================================================================
     #   On charge le binaire
 
@@ -266,27 +272,48 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
     mapBinaire = rasterB.getAFMap('B')
 
 
+
+
     # =============================================================================
     #   Dilatation + Erosion
 
-    mask = np.array([
-        [0,1,0],
-        [1,1,1],
-        [0,1,0]])
-    # Dilatation
-    mapBinaire.filter(mask, np.max)
-    tkl.RasterWriter.writeMapToAscFile(pathdilatation, mapBinaire)
-    #pathdilatation = patherosion
+    if closing:
+        mask = np.array([
+            [0,1,0],
+            [1,1,1],
+            [0,1,0]])
 
-    # Erosion
-    if prefix=='PT':
-        mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
-        mapBinaire.filter(mask, np.max)                        # Dilatation
-        mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
-        tkl.RasterWriter.writeMapToAscFile(patherosion, mapBinaire)
-        pathdepart = patherosion
+        # Dilatation
+        mapBinaire.filter(mask, np.max)
+        tkl.RasterWriter.writeMapToAscFile(pathdilatation, mapBinaire)
+
+        # Erosion
+        if prefix=='PT':
+            mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
+            mapBinaire.filter(mask, np.max)                        # Dilatation
+            mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
+            tkl.RasterWriter.writeMapToAscFile(patherosion, mapBinaire)
+            pathdepart = patherosion
+        else:
+            pathdepart = pathdilatation
     else:
-        pathdepart = pathdilatation
+        asize = G1_SIZE * G1_SIZE * G1_SIZE * G1_SIZE + 1
+        clean = remove_small_holes(mapBinaire.grid.astype(bool), area_threshold=asize,
+                                     connectivity=1)
+        clean = remove_small_objects(clean, min_size=asize,
+                                     connectivity=1)
+        clean_uint8 = clean.astype(np.uint8)
+
+
+        # print(np.unique(clean_uint8))
+
+        mapBinaire.grid = clean_uint8
+
+
+
+        tkl.RasterWriter.writeMapToAscFile(pathrien, mapBinaire)
+        pathdepart = pathrien
+
 
 
     t1 = time.time()
@@ -321,117 +348,76 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, 
 
     gdal.Polygonize(srcband, None, layerSurface, dst_field, [], callback=None)
 
-    # Nettoyage
-    del dsSurface
-    del dsDepart
+    # forcer écriture
+    layerSurface.SyncToDisk()
+    dsSurface.FlushCache()
+    
+    # fermeture propre
+    layerSurface = None
+    dsSurface = None
+    dsDepart = None
 
 
     # =========================================================================
-    # On copie Surface vers RoadSurface
+    # On "transfere" Surface vers RoadSurface
 
     # ouvrir la source
     dsSurface = ogr.Open(surfpath)
+    layer = dsSurface.GetLayer(0)
+    print("    Number of polygonize features: ", layer.GetFeatureCount())
 
-    # copier la datasource
-    dsRoadSurface = shpDriver.CopyDataSource(dsSurface, roadsurfpath)
+    dsRoadSurface = shpDriver.CreateDataSource(roadsurfpath)
+    layerRoadSurface = dsRoadSurface.CreateLayer("road_surface", srs=l93Ref)
 
-    # fermer les datasets
-    dsSurface = None
-    dsRoadSurface = None
+    '''
+    DN=0 + filtre sur la surface + id + enleve le cadre
+           on corrige la géométrie
+    '''
 
+    field_defn = ogr.FieldDefn("id", ogr.OFTInteger)
+    layerRoadSurface.CreateField(field_defn)
 
-    # =============================================================================
-    #   Squeletisation : DN=0 + filtre sur la surface + id + enleve le cadre
-    #       on corrige la géométrie
-
-    dsRoadSurface = ogr.Open(roadsurfpath, 1)
-    layerRoadSurface = dsRoadSurface.GetLayer()
-
-
-    # Appliquer un filtre attributaire
-    layerRoadSurface.SetAttributeFilter("DN = 0")
-
-    # Récupérer les features à supprimer
-    feature_ids = []
-    for feature in layerRoadSurface:
-        feature_ids.append(feature.GetFID())
-    
-    # Supprimer les features
-    for fid in feature_ids:
-        layerRoadSurface.DeleteFeature(fid)
-
-    layerRoadSurface.SetAttributeFilter(None)
-
-    # ------------------------------------------
-    #    On enlève les polygones trop petit
-    fids_to_delete = []
-
-    for feature in layerRoadSurface:
-        geom = feature.GetGeometryRef()
-        if geom is not None:
-            area = geom.GetArea()
-            if area <= SEUIL_SURFACE:
-                fids_to_delete.append(feature.GetFID())
-            # else:
-            #    print ("Un polygone gardé avec comme surface", area, SEUIL_SURFACE)
-
-    for fid in fids_to_delete:
-        layerRoadSurface.DeleteFeature(fid)
-
-
-
-
-    # ------------------------------------------
-    #   On enlève le cadre
-
-    fids_to_delete = []
+    cpt = 0
 
     minx1, maxx1, miny1, maxy1 = layerRoadSurface.GetExtent()
     extent = bbox_to_polygon(minx1, maxx1, miny1, maxy1)
-    for feature in layerRoadSurface:
-        geom = feature.GetGeometryRef()
-        if geom is not None:
-            minx2, maxx2, miny2, maxy2 = geom.GetEnvelope()
-            envelope = bbox_to_polygon(minx2, maxx2, miny2, maxy2)
 
-            intersection = extent.Intersection(envelope)
-            union = extent.Union(envelope)
-            iou = intersection.GetArea() / union.GetArea()
-            if iou >= 0.99:
-                fids_to_delete.append(feature.GetFID())
+    for feat in layer:
+        geom = feat.GetGeometryRef()
+        # print(geom.IsValid(), feat.GetField("DN"))
 
-    for fid in fids_to_delete:
-        layerRoadSurface.DeleteFeature(fid)
+        if feat.GetField("DN") == 1:
+            # print ('DN = 1')
+            if geom is not None:
+                area = geom.GetArea()
+                if area > SEUIL_SURFACE:
+                    # print ('Bonne surface')
 
+                    minx2, maxx2, miny2, maxy2 = geom.GetEnvelope()
+                    envelope = bbox_to_polygon(minx2, maxx2, miny2, maxy2)
 
+                    intersection = extent.Intersection(envelope)
+                    union = extent.Union(envelope)
+                    iou = intersection.GetArea() / union.GetArea()
+                    if iou < 0.99:
+                        cpt += 1
+                        # print ('pas cadre')
+                        g = geom.Clone()
+                        if not g.IsValid():
+                            g = g.Buffer(0)
 
-    # -----------------------------------------
-    #   On ajoute une colonne Id (je ne sais plus pourquoi)
-
-    # Vérifier si le champ existe déjà
-    layer_defn = layerRoadSurface.GetLayerDefn()
-    field_names = [layer_defn.GetFieldDefn(i).GetName() for i in range(layer_defn.GetFieldCount())]
-
-    if "id" not in field_names:
-        field_defn = ogr.FieldDefn("id", ogr.OFTInteger)
-        layerRoadSurface.CreateField(field_defn)
-
-    i = 1
-    for feature in layerRoadSurface:
-        feature.SetField("id", i)
-        layerRoadSurface.SetFeature(feature)
-        i += 1
+                        new_feat = ogr.Feature(layerRoadSurface.GetLayerDefn())
+                        new_feat.SetGeometry(g)
+                        new_feat.SetField("id", cpt)
+                        layerRoadSurface.CreateFeature(new_feat)
+                        new_feat = None
 
 
-    # -----------------------------------------
-    #   On essaie de corriger les géométries
+    print("    Number of polygonize features copied: ", cpt)
 
-    for feature in layerRoadSurface:
-        geom = feature.GetGeometryRef()
-        geom = geom.Buffer(0)
-
+    # fermer proprement
+    layerRoadSurface.SyncToDisk()
     dsRoadSurface = None
-
 
 
     # -----------------------------------------

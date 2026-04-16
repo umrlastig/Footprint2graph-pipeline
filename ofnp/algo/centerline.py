@@ -19,6 +19,7 @@ try:
     from shapely.ops import unary_union
     from shapely.geometry import mapping, shape
     from shapely.geometry import LineString, Point
+    from shapely.geometry import MultiPolygon
 except ImportError:
     print ('Code running in a no shapely environment')
 
@@ -112,6 +113,9 @@ class Centerline(object):
         Example:
             [[X1, Y1], [X2, Y2], ..., [Xn, Yn]
         """
+        if isinstance(polygon, MultiPolygon):
+            print("C'est un MultiPolygon !!!!!!")
+            geom = max(geom.geoms, key=lambda g: g.area)
 
         if len(polygon.interiors) == 0:
             exterIN = LineString(polygon.exterior)
