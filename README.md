@@ -13,7 +13,7 @@ OFNP is an open-source Python processing pipeline (MIT license) for generating o
 The online documentation is available at **[ReadTheDocs](https://outdoorfootprintnetworkpipeline.readthedocs.io)**
 
 Specifically, the documentation includes end-to-end example:
-- **[with a set of simulated trajectories generated from a network](https://outdoorfootprintnetworkpipeline.readthedocs.io/en/latest/examples/Simple_End-to-End_Example.html)**
+- **with a set of simulated trajectories generated from a network** :[example](https://outdoorfootprintnetworkpipeline.readthedocs.io/en/latest/examples/Simulated-Traj_Example.html)
 
 
 
