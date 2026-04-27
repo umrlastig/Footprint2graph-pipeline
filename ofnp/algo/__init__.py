@@ -4,3 +4,5 @@
 from .smooth import *
 from .conflation import *
 from .centerline import *
+from .geometry import *
+from .segmentation import *

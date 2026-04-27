@@ -5,10 +5,13 @@ import os
 
 
 def setupenv(RESPATH):
-    """ ======================================================================= """
-    """     Preparation de l'environnement                                      """
-    """   - création des répertoires si nécessaire                                                                      """
-    """                                                                         """
+    """ =================================================================== """
+    """     Preparation de l'environnement                                  """
+    """   - creation du fichier de log                                      """
+    """   - création des répertoires si nécessaire                          """
+    """                                                                     """
+
+    
 
     if not os.path.exists(RESPATH + 'decoup'):
         os.makedirs(RESPATH + 'decoup')
@@ -49,4 +52,13 @@ def setupenv(RESPATH):
         os.makedirs(RESPATH + 'points_not_mm_1')
     if not os.path.exists(RESPATH + 'points_not_mm_2'):
         os.makedirs(RESPATH + 'points_not_mm_2')
+
+
+
+def reportfile():
+    print ('---------------------------------------------------------------------')
+    print ('                    PIPELINE REPORT FILE                             ')
+    print ('---------------------------------------------------------------------')
+
+
 

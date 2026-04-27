@@ -50,6 +50,12 @@ def matPlotShapefile(pathres, filename, append):
 def plotMM(pathres, append):
     collection = tkl.TrackCollection()
     mmtrackpath = pathres + '/mapmatch/tmm/'
+    XR = []
+    YR = []
+    XG = []
+    YG = []
+    XB = []
+    YB = []
     for mmfilename in os.listdir(mmtrackpath):
         #N;E;time;U;num;track_id;user_id;hmm_inference;mmtype;idedge
         fmt = tkl.TrackFormat({'ext': 'CSV',
@@ -73,15 +79,18 @@ def plotMM(pathres, append):
     
                 if str(trace["mmtype", j]) == "NOT":
                     # pas de MM
-                    append.scatter(x, y, color='red', s=10, label='Not Map-matched')
+                    XR.append(x)
+                    YR.append(y)
                 if str(trace["mmtype", j]) == "EDGE":
-                    xmm = hmminf[0]
-                    ymm = hmminf[1]
-                    append.scatter(xmm, ymm, color='green', s=10, label='Map-matched on edge')
+                    XG.append(hmminf[0])
+                    YG.append(hmminf[1])
                 if str(trace["mmtype", j]) == "SOURCE" or str(trace["mmtype", j]) == "TARGET":
-                    xmm = hmminf[0]
-                    ymm = hmminf[1]
-                    append.scatter(xmm, ymm, color='blue', s=10, label='Map-matched on node')
+                    XB.append(hmminf[0])
+                    YB.append(hmminf[1])
+
+        append.scatter(XG, YG, color='green', s=3, label='Map-matched on edge')
+        append.scatter(XR, YR, color='red', s=3, label='Not Map-matched')
+        append.scatter(XB, YB, color='cyan', s=3, label='Map-matched on node')
 
         # Supprime les doublons dans la légende
         handles, labels = append.get_legend_handles_labels()
@@ -134,7 +143,7 @@ def plotAggregation(pathres, ax):
             ax.plot(trace.getX(), trace.getY(), color='red', linestyle='-')
 
 
-def plotConflation(pathres, ax):
+def plotConflation(pathres, append, size=0.8, label=''):
     raccordpath = pathres + '/geometry/raccord/'
     for raccordfilename in os.listdir(raccordpath):
         with open(raccordpath + raccordfilename, 'r') as file:
@@ -145,11 +154,28 @@ def plotConflation(pathres, ax):
                 continue
     
             trace = tkl.TrackReader.parseWkt(wkt, 'ENU')
-            ax.plot(trace.getX(), trace.getY(), color='green', linestyle='-')
+            append.plot(trace.getX(), trace.getY(), color='green', linestyle='-',
+                    linewidth=size, label=label)
+
+    # Supprime les doublons dans la légende
+    handles, labels = append.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    append.legend(by_label.values(), by_label.keys())
 
 
 
-
+def plotSqueletteTopo(pathres, ax):
+    output_file = str(pathres) + 'network/squelette_topology_simplifie_PT.csv'
+    fmt = tkl.NetworkFormat({
+           "pos_edge_id": 0,
+           "pos_source": 1,
+           "pos_target": 2,
+           "pos_wkt": 3,
+           "srid": "ENU",
+           "separator": ",",
+           "header": 1})
+    network = tkl.NetworkReader.readFromFile(output_file, fmt, verbose=False)
+    network.plot('k-', nodes='ko', size=0.8, append=ax)
 
 
 
