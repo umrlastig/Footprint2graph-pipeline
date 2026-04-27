@@ -114,20 +114,41 @@ class Centerline(object):
             [[X1, Y1], [X2, Y2], ..., [Xn, Yn]
         """
         if isinstance(polygon, MultiPolygon):
-            print("C'est un MultiPolygon !!!!!!")
-            geom = max(geom.geoms, key=lambda g: g.area)
+            # print("C'est un MultiPolygon !!!!!!")
 
-        if len(polygon.interiors) == 0:
-            exterIN = LineString(polygon.exterior)
-            points = self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+            cpt = 0
+            for poly in polygon.geoms:
+                if len(poly.interiors) == 0:
+                    exterIN = LineString(poly.exterior)
+                    if cpt == 0:
+                        points = self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+                    else:
+                        points += self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+                else:
+                    exterIN = LineString(poly.exterior)
+                    if cpt == 0:
+                        points = self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+                    else:
+                        points += self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+                    for j in range(len(poly.interiors)):
+                        interIN = LineString(polygon.interiors[j])
+                        points += self.fixedInterpolation(interIN, minx, miny)
+                cpt +=1
 
         else:
-            exterIN = LineString(polygon.exterior)
-            points = self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+            # print("C'est un Polygon !!!!!!")
 
-            for j in range(len(polygon.interiors)):
-                interIN = LineString(polygon.interiors[j])
-                points += self.fixedInterpolation(interIN, minx, miny)
+            if len(polygon.interiors) == 0:
+                exterIN = LineString(polygon.exterior)
+                points = self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+    
+            else:
+                exterIN = LineString(polygon.exterior)
+                points = self.fixedInterpolation(exterIN, minx, miny, verbose=True)
+    
+                for j in range(len(polygon.interiors)):
+                    interIN = LineString(polygon.interiors[j])
+                    points += self.fixedInterpolation(interIN, minx, miny)
 
         return points
 
