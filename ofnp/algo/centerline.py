@@ -131,7 +131,7 @@ class Centerline(object):
                     else:
                         points += self.fixedInterpolation(exterIN, minx, miny, verbose=True)
                     for j in range(len(poly.interiors)):
-                        interIN = LineString(polygon.interiors[j])
+                        interIN = LineString(poly.interiors[j])
                         points += self.fixedInterpolation(interIN, minx, miny)
                 cpt +=1
 
