@@ -5,15 +5,15 @@ from setuptools import setup
 current_path = os.path.abspath(os.path.dirname(__file__))
 
 requirements = (
-        "tracklib",
-        "fiona",
-        "shapely"
+    "tracklib",
+    "fiona",
+    "shapely"
 )
 
 dev_requirements = (
-        "pytest",
-        "pytest-runner", 
-        "coverage"
+    "pytest",
+    "pytest-runner",
+    "coverage"
 )
 
 doc_requirements = (
@@ -47,7 +47,7 @@ setup (
     install_requires=requirements,
     test_suite="tests",
     extras_require={
-        "dev": dev_requirements, 
+        "dev": dev_requirements,
         "doc": doc_requirements
     },
 )
