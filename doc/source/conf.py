@@ -21,7 +21,7 @@ sys.path.append(os.path.abspath("../../footprint2graph"))
 
 # -- Project information -----------------------------------------------------
 
-project = "Footprint2Graph Pipeline for Outdoor Recreation"
+project = "Footprint2Graph-pipeline"
 copyright = (
     "2026, LASTIG lab, French National Institute of Geographic and Forest Information"
 )
