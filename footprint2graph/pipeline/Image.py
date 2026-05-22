@@ -123,6 +123,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
             grilleG1.grid[i][j] = grilleG1.grid[i][j] / (G1_SIZE*G1_SIZE)
     
     pathG1 = respath + 'G1_' + prefix + '.asc'
+    print ('pathG1', pathG1)
     tkl.RasterWriter.writeMapToAscFile(pathG1, grilleG1)
     
 
@@ -146,6 +147,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
 
     G2 = maximum_filter(grilleG1.grid, size=nb)
     pathG2 = respath + 'G2_' + prefix + '.asc'
+    print ('pathG2', pathG2)
     writeArray(pathG2, G2)
 
     
