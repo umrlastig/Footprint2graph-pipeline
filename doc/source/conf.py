@@ -16,12 +16,12 @@ import sys
 #sys.path.insert(0, os.path.abspath("../.."))
 #sys.path.append(os.path.abspath(".."))
 sys.path.append(os.path.abspath("../.."))
-sys.path.append(os.path.abspath("../../ofnp"))
+sys.path.append(os.path.abspath("../../footprint2graph"))
 
 
 # -- Project information -----------------------------------------------------
 
-project = "OutdoorFootprintNetworkPipeline"
+project = "Footprint2Graph Pipeline for Outdoor Recreation"
 copyright = (
     "2026, LASTIG lab, French National Institute of Geographic and Forest Information"
 )
@@ -96,7 +96,7 @@ html_theme_options = {
 
 
 #html_static_path = ['_static']
-html_logo = "_static/OFNPLogo.png"
+html_logo = "_static/Footprint2graph.png"
 
 
 

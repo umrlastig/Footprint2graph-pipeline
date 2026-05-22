@@ -23,12 +23,12 @@ doc_requirements = (
 )
 
 setup (
-    name="OutdoorFootprintNetworkPipeline",
+    name="Footprint2graph-pipeline",
     version="1.0.0",
-    description="OFNP is an open-source Python processing pipeline (MIT license) for generating outdoor activity footprint networks from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within a defined spatial and temporal extent.",
+    description="Footprint2graph-pipeline is an open-source Python processing pipeline (MIT license) for generating outdoor activity footprint networks from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within a defined spatial and temporal extent.",
     long_description="See ...",
-    url="https://github.com/umrlastig/OutdoorFootprintNetworkPipeline",
-    download_url= 'https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/archive/refs/tags/v1.0.0-alpha.tar.gz',
+    url="https://github.com/umrlastig/Footprint2graph-pipeline",
+    download_url= '',
     author="Marie-Dominique Van Damme, Yann Méneroux",
     author_email="todo@ign.fr",
     keywords=[],
@@ -39,7 +39,7 @@ setup (
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3.10",
     ],
-    packages = ['ofnp','ofnp.algo','ofnp.pipeline','ofnp.util'],
+    packages = ['footprint2graph','footprint2graph.algo','footprint2graph.pipeline','footprint2graph.util'],
     install_requires=requirements,
     extras_require={
         "doc": doc_requirements
