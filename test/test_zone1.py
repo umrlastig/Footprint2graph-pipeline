@@ -9,11 +9,13 @@ class TestZone1(unittest.TestCase):
 
 
     def setUp (self):
+        #RESPATH = r'/home/md_vandamme/4_RESEAU/ZTEMPZ1/'
         pass
 
         
     
     def testCircle(self):
+        self.assertTrue("1=1", "premier test")
         print ("OK")
 
 
