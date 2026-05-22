@@ -1,11 +1,13 @@
-# OutdoorFootprintNetworkPipeline (OFNP)
+# Footprint2Graph Pipeline for Outdoor Recreation 
 
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Documentation Status](https://readthedocs.org/projects/OutdoorFootprintNetworkPipeline/badge/?version=latest)](https://OutdoorFootprintNetworkPipeline.readthedocs.io/en/latest/?badge=latest)
 [![Software License](https://img.shields.io/badge/Licence-MIT-blue.svg?style=flat)](https://github.com/umrlastig/OutdoorFootprintNetworkPipeline/blob/main/LICENCE)
+[![Footprint2graph-pipeline build & test](https://github.com/umrlastig/Footprint2graph-pipeline/actions/workflows/pipeline.yml/badge.svg)](https://github.com/umrlastig/Footprint2graph-pipeline/actions/workflows/pipeline.yml)
+[![codecov](https://codecov.io/gh/umrlastig/Footprint2graph-pipeline/branch/main/graph/badge.svg?token=pHLaV21j2O)](https://codecov.io/gh/umrlastig/Footprint2graph-pipeline)
 
 
-OFNP is an open-source Python processing pipeline (MIT license) for generating outdoor activity footprint graphs from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within a defined spatial and temporal extent. The pipeline includes several components, such as GNSS point map-matching onto a network and trajectory aggregation, both implemented using the Tracklib Python library.
+Footprint2graph-pipeline is an open-source Python processing pipeline (MIT license) for generating outdoor activity footprint graphs from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within a defined spatial and temporal extent. The pipeline includes several components, such as GNSS point map-matching onto a network and trajectory aggregation, both implemented using the Tracklib Python library.
 
 
 ## Documentation
