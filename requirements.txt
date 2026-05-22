@@ -2,5 +2,3 @@ tracklib
 fiona
 shapely
 psutil
-gdal-bin
-libgdal-dev

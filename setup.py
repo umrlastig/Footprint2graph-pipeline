@@ -8,9 +8,7 @@ requirements = (
     "tracklib",
     "fiona",
     "shapely",
-    "psutil",
-    "gdal-bin",
-    "libgdal-dev"
+    "psutil"
 )
 
 dev_requirements = (
