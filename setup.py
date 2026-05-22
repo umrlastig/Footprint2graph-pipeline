@@ -6,10 +6,14 @@ current_path = os.path.abspath(os.path.dirname(__file__))
 
 requirements = (
         "tracklib",
-        "osgeo",
         "fiona",
-        "shapely",
-        ""
+        "shapely"
+)
+
+dev_requirements = (
+        "pytest",
+        "pytest-runner", 
+        "coverage"
 )
 
 doc_requirements = (
@@ -41,6 +45,7 @@ setup (
     ],
     packages = ['footprint2graph','footprint2graph.algo','footprint2graph.pipeline','footprint2graph.util'],
     install_requires=requirements,
+    test_suite="tests",
     extras_require={
         "doc": doc_requirements
     },

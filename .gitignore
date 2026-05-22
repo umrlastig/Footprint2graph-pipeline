@@ -213,7 +213,7 @@ old/
 doc/source/__pycache__/
 /doc/public/
 
-test/
+footprint2graph/test/
 
 
 
