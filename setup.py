@@ -9,7 +9,8 @@ requirements = (
     "fiona",
     "shapely",
     "psutil",
-    "gdal"
+    "gdal-bin",
+    "libgdal-dev"
 )
 
 dev_requirements = (
