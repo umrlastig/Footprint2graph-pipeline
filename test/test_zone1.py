@@ -5,6 +5,7 @@ import unittest
 import os
 import tracklib as tkl
 from footprint2graph import setupenv
+from footprint2graph import run_iteration
 
 
 class TestZone1(unittest.TestCase):
@@ -17,8 +18,8 @@ class TestZone1(unittest.TestCase):
     def setUp (self):
         self.resource_path = os.path.join(os.path.split(__file__)[0], "..")
 
-        RESPATH = os.path.join(self.resource_path, 'data/result')
-        setupenv(RESPATH)
+        self.RESPATH = os.path.join(self.resource_path, './test/result/')
+        setupenv(self.RESPATH)
 
         #  Import du réseau
         netpath = os.path.join(self.resource_path, 'data/network2.csv')
@@ -52,6 +53,20 @@ class TestZone1(unittest.TestCase):
         self.assertEqual(len(self.network.EDGES), 7, 'Number of edges=')
         self.assertEqual(len(self.network.NODES), 8 ,'Number of nodes')
 
+
+        pipeline_idx = 1
+        run_iteration(pipeline_idx, self.RESPATH, self.collection)
+
+
+        fmt = tkl.TrackFormat({'ext': 'CSV',
+                               'srid': 'ENU',
+                               'id_E': 1,'id_N': 0, 'id_U': 3,'id_T': 2,
+                               'separator': ';',
+                               'header': 1,
+                               'read_all': True})
+        resampledtracespath = self.RESPATH + 'resample_grid' + '/'
+        tracks = tkl.TrackReader.readFromFile(resampledtracespath, fmt, verbose=False)
+        self.assertEqual(len(tracks), 91, 'Number of tracks after segmentation=')
 
 
 
