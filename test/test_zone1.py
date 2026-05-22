@@ -15,11 +15,13 @@ class TestZone1(unittest.TestCase):
 
 
     def setUp (self):
-        RESPATH = r'./result'
+        self.resource_path = os.path.join(os.path.split(__file__)[0], "..")
+
+        RESPATH = os.path.join(self.resource_path, 'data/result')
         setupenv(RESPATH)
 
         #  Import du réseau
-        netpath = os.path.abspath(os.path.join('../data/network2.csv'))
+        netpath = os.path.join(self.resource_path, 'data/network2.csv')
         fmt = tkl.NetworkFormat({
                "pos_edge_id": 1,
                "pos_source": 2,
