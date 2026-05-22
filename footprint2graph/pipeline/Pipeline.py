@@ -24,11 +24,11 @@ G1_SIZE = 2
 G2_SIZE = 30 # 30, 50
 
 
-SEUIL_DENSITE = 450 # 360 - 500 - 280 - 15 - 1000
-SEUIL_SURFACE = 1000 # m2 - 50000 - 7000
 
-cut_factor = 5
-closing = False
+
+
+
+
 
 
 def run_iteration(pipeline_idx, respath, collection):
@@ -44,12 +44,18 @@ def run_iteration(pipeline_idx, respath, collection):
                        'header': 0,
                        'cmt': '#',
                        'read_all': True})
+
     segmentation_resample(respath, collection, fmt, NB_OBS_MIN, DIST_MAX_2OBS,
                 RESAMPLE_SIZE_GRID, RESAMPLE_SIZE_FUSION)
 
 
+    SEUIL_DENSITE = 450 # 360 - 500 - 280 - 15 - 1000
+    SEUIL_SURFACE = 1000 # m2 - 50000 - 7000
+    cut_factor = 5
+    closing = False
     density_polygonize(respath, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, closing,
                        prefix='PT', rep='resample_grid', cut_factor=cut_factor)
 
 
-
+    SEARCH = 50
+    h = 10
