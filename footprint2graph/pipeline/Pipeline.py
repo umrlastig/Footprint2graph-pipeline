@@ -5,6 +5,7 @@ import tracklib as tkl
 
 from footprint2graph import logEnv
 from . import segmentation_resample
+from . import density_polygonize
 
 
 # Paramètre : Nombre de points minimum pour un morceau de trace au moment du découpage
@@ -19,6 +20,15 @@ RESAMPLE_SIZE_GRID = 1
 RESAMPLE_SIZE_FUSION = 5
 
 
+G1_SIZE = 2
+G2_SIZE = 30 # 30, 50
+
+
+SEUIL_DENSITE = 450 # 360 - 500 - 280 - 15 - 1000
+SEUIL_SURFACE = 1000 # m2 - 50000 - 7000
+
+cut_factor = 5
+closing = False
 
 
 def run_iteration(pipeline_idx, respath, collection):
@@ -38,5 +48,8 @@ def run_iteration(pipeline_idx, respath, collection):
                 RESAMPLE_SIZE_GRID, RESAMPLE_SIZE_FUSION)
 
 
-    #density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, closing,
-    #               prefix='PT', rep='resample_grid', cut_factor=cut_factor)
+    density_polygonize(respath, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, closing,
+                       prefix='PT', rep='resample_grid', cut_factor=cut_factor)
+
+
+

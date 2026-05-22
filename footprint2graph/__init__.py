@@ -2,6 +2,6 @@
 
 
 from .util import *
-#from .algo import *
+from .algo import *
 from .pipeline import *
 
