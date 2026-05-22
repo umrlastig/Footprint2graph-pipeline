@@ -3,6 +3,7 @@
 
 import tracklib as tkl
 
+from footprint2graph import logEnv
 from . import segmentation_resample
 
 
@@ -22,6 +23,8 @@ RESAMPLE_SIZE_FUSION = 5
 
 def run_iteration(pipeline_idx, respath, collection):
 
+    logEnv(respath)
+
     #  On définit un format pour le stockage des traces modifiées dans le pipeline
     fmt = tkl.TrackFormat({'ext': 'CSV',
                        'srid': 'ENU',
@@ -33,3 +36,7 @@ def run_iteration(pipeline_idx, respath, collection):
                        'read_all': True})
     segmentation_resample(respath, collection, fmt, NB_OBS_MIN, DIST_MAX_2OBS,
                 RESAMPLE_SIZE_GRID, RESAMPLE_SIZE_FUSION)
+
+
+    #density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE, closing,
+    #               prefix='PT', rep='resample_grid', cut_factor=cut_factor)

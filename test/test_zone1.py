@@ -4,6 +4,7 @@ import unittest
 
 import os
 import tracklib as tkl
+
 from footprint2graph import setupenv
 from footprint2graph import run_iteration
 
@@ -67,8 +68,6 @@ class TestZone1(unittest.TestCase):
         resampledtracespath = self.RESPATH + 'resample_grid' + '/'
         tracks = tkl.TrackReader.readFromFile(resampledtracespath, fmt, verbose=False)
         self.assertEqual(len(tracks), 91, 'Number of tracks after segmentation=')
-
-
 
 
 

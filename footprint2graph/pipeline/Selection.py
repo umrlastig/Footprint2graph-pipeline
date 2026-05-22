@@ -3,12 +3,11 @@
 import math
 import os
 import sys
+
 import csv
 csv.field_size_limit(sys.maxsize)
 
 import tracklib as tkl
-
-
 
 
 def load_raw_tracks_split(RESPATH, tracespathsource, fmt, X, Y):
