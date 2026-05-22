@@ -214,6 +214,7 @@ doc/source/__pycache__/
 /doc/public/
 
 footprint2graph/test/
+test/result/
 
 
 
