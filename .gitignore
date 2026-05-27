@@ -214,7 +214,23 @@ doc/source/__pycache__/
 /doc/public/
 
 footprint2graph/test/
-test/result/
+test/result1/
+test/result2/
+MainZone1.py
+tmp/
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
