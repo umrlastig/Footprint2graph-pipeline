@@ -4,4 +4,4 @@
 from .util import *
 from .algo import *
 from .pipeline import *
-
+from .Pipeline import *

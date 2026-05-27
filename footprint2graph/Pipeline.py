@@ -96,7 +96,7 @@ def run_iteration(pipeline_idx, respath, collection):
     #
     SEARCH = 20
     BUFFER = 15
-    createNetworkGeom(RESPATH, SEARCH, BUFFER)
+    createNetworkGeom(respath, SEARCH, BUFFER, pipeline_idx)
 
 
 

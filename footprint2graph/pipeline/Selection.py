@@ -3,87 +3,37 @@
 import math
 import os
 import sys
-
+import time
 import csv
 csv.field_size_limit(sys.maxsize)
 
 import tracklib as tkl
+from footprint2graph import log_event
+
+'''
+Ce module contient 2 fonctions qui permettent de constituer une collection
+de traces d'entrée au pipeline suivant une définition établie et les prépare 
+aux processus du pipeline:
+
+    - à partir d'une collection de traces
+    - à partir d'une collection des points non appariés des traces
 
 
-def load_raw_tracks_split(RESPATH, tracespathsource, fmt, X, Y):
-    '''
-    Dédié aux traces de Outdoorvision :
-        les attributs sont stockés dans le fichier .csv
-    '''
-
-    print ('Loading and split track data...')
-
-
-    """ ======================================================================= """
-    """         Reading                                                         """
-    """                                                                         """
-    print ('Reading track data...')
-
-    poly = tkl.Polygon(X, Y)
-    constraintBBox = tkl.Constraint(shape=poly,
-                                    mode=tkl.MODE_CROSSES,
-                                    type=tkl.TYPE_CUT_AND_SELECT)
+Les bonnes définitions de trace sont dans le répertoire: 
+    - decoup pour l'itération 1
+    - points_not_mm_1 pour les autres itérations 
+Les traces ré-échantillonnées sont dans les répertoires:
+    - resample_grid et resample_fusion pour l'itération 1
+    - "x" pour les autres itérations (ré-échantillonage est déjà fait)
 
 
-    tracks = tkl.TrackSource(tracespathsource, fmt)
-    total = len(tracks)
-    print ('     Number files to load: ', total)
 
-
-    """ ======================================================================= """
-    """         Découpage                                                       """
-    """                                                                         """
-    print ('Starting split ...')
-
-    metacollectionpath = RESPATH + 'metadata_collection.csv'
-    f1 = open(metacollectionpath,'w')
-    f1.write("ID;NUM;TRACK_ID;USER_ID\n")
-
-    cpt = 1
-    cutCollection = tkl.TrackCollection()
-
-    for track in tracks:
-        if cpt%500 == 0:
-            print ('    ', cpt, '/', total)
-
-        ID = 'OV_' + str(cpt)
-        cpt += 1
-
-        num = str(int(track.getObsAnalyticalFeature('num', 0)))
-        uid = str(int(track.getObsAnalyticalFeature('user_id', 0)))
-        tid = str(int(track.getObsAnalyticalFeature('track_id', 0)))
-        f1.write(ID + ";" + str(num) + ";" + str(tid) + ";" + str(uid) + "\n")
-
-        selection = constraintBBox.select(tkl.TrackCollection([track]))
-        if len(selection) <= 0:
-            continue
-
-        newtrack = tkl.Track()
-        newtrack.tid = ID
-        newtrack.uid = ID
-        for o in selection.getTrack(0):
-            newtrack.addObs(tkl.Obs(tkl.ENUCoords(o.position.getX(), o.position.getY()),
-                                    tkl.ObsTime()))
-        newtrack.createAnalyticalFeature('TID', str(ID))
-        cutCollection.addTrack(newtrack)
-
-    f1.close()
-
-
-    print ('     Number of tracks after split: ' + str(cutCollection.size()))
-
-    return cutCollection
-
+'''
 
 
 
 def segmentation_resample(RESPATH, collection, fmt,
-                          NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
+                    NB_OBS_MIN = 10, DIST_MAX_2OBS = 50,
                     resampleSizeGrid = 1, resampleSizeFusion = 5):
 
     print ("Starting segmentation and resampling...")
@@ -92,6 +42,7 @@ def segmentation_resample(RESPATH, collection, fmt,
     RESAMPLE_SIZE_FUSION = resampleSizeFusion
 
     total = len(collection)
+    NB_TRACKS = total
 
 
     """ =================================================================== """
@@ -102,6 +53,8 @@ def segmentation_resample(RESPATH, collection, fmt,
     cpt = 1
     cutCollection = tkl.TrackCollection()
 
+    NB_TRACKS_CUT = 0
+
     for track in collection:
         if cpt%500 == 0:
             print ('    ', cpt, '/', total)
@@ -110,6 +63,7 @@ def segmentation_resample(RESPATH, collection, fmt,
         num = str(track.getObsAnalyticalFeature('TID', 0))
 
         idxSelect = 1
+        decoup = False
         o1 = None
         newtrack = tkl.Track()
         newtrack.uid = num
@@ -119,6 +73,7 @@ def segmentation_resample(RESPATH, collection, fmt,
                 if o1.distance2DTo(o2) > DIST_MAX_2OBS:
                     # on coupe la trace pour créer un nouveau morceau
                     if newtrack.size() >= NB_OBS_MIN:
+                        decoup = True
                         tid = num + "-s" + str(idxSelect)
                         newtrack.createAnalyticalFeature('TID', num)
                         newtrack.createAnalyticalFeature('MID', tid)
@@ -136,12 +91,14 @@ def segmentation_resample(RESPATH, collection, fmt,
             newtrack.createAnalyticalFeature('TID', num)
             newtrack.createAnalyticalFeature('MID', tid)
             cutCollection.addTrack(newtrack)
+            if decoup:
+                NB_TRACKS_CUT += 1
 
     print ('    Number of tracks after segmentation: ' + str(cutCollection.size()))
 
 
     """ ======================================================================= """
-    """         Saving                                                          """
+    """         Enregistrement des "bonnes" traces                              """
     """                                                                         """
 
     af_names = ['TID', 'MID']
@@ -152,13 +109,6 @@ def segmentation_resample(RESPATH, collection, fmt,
                                  h=1, separator=";", af_names=af_names)
 
     print ("Finished saving segmented tracks.")
-
-
-    # =========================================================================
-    #
-
-    
-
 
 
     # =========================================================================
@@ -174,6 +124,9 @@ def segmentation_resample(RESPATH, collection, fmt,
     total = len(tracks)
     print ('    Number of tracks to resample: ', total)
 
+
+    MOY_DIST = 0
+    MOY_NBPTS = 0
 
     for track in tracks:
         num1 = str(track.getObsAnalyticalFeature('TID', 0))
@@ -198,6 +151,9 @@ def segmentation_resample(RESPATH, collection, fmt,
         trackF.createAnalyticalFeature('TID', num1)
         trackF.createAnalyticalFeature('MID', num2)
         collectionFusion.addTrack(trackF)
+
+        MOY_DIST += track.length()
+        MOY_NBPTS += track.size()
 
 
     print ('    Number of tracks after resampling:', str(collectionGrid.size()))
@@ -224,6 +180,32 @@ def segmentation_resample(RESPATH, collection, fmt,
 
     print ("Finished saving resampled tracks.")
 
+
+
+    # =========================================================================
+    #    Journalisation des résultats
+
+    bbox = collectionGrid.bbox().asTuple()
+    xmin = bbox[0]
+    xmax = bbox[1]
+    ymin = bbox[2]
+    ymax = bbox[3]
+    bboxtxt =  "XMin = " + str(xmin) + ", YMin = " + str(ymin)
+    bboxtxt += ", XMax = " + str(xmax) + ", YMax = " + str(ymax)
+
+    try:
+        log_event(RESPATH + "rawdata.json", {
+            "Nb traces": NB_TRACKS,
+            "Nb traces découpées": NB_TRACKS_CUT,
+            "Nb traces final": total,
+            "Moyenne des distances": round(MOY_DIST / total),
+            "Moyenne du nombre de points": round(MOY_NBPTS / total),
+            "Emprise spatiale": bboxtxt,
+            "ts": time.time()
+        })
+    except Exception as e:
+        print (e)
+        print ('Error while writing rawdata information to log.')
 
 
 

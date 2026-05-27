@@ -3,7 +3,6 @@
 
 from .Selection import *
 from .Image import *
-#from .Topology import *
-#from .Geometry import *
-from .Pipeline import *
+from .Topology import *
+from .Geometry import *
 

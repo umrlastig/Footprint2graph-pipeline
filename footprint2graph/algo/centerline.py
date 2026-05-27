@@ -25,10 +25,13 @@ except ImportError:
 
 import matplotlib.pyplot as plt
 
-# =================================================================================================
-# CLASS FOR COMPUTING CENTER LINES
-# =================================================================================================
+
+
+
 class Centerline(object):
+    '''
+    CLASS FOR COMPUTING CENTER LINES
+    '''
 
     def __init__(self, inputGEOM, dist, clean_dist):
         self.inputGEOM = inputGEOM
@@ -194,17 +197,21 @@ class Centerline(object):
         return newline
 
 
-# =================================================================================================
-# MAIN CLASS FOR EXECUTING CENTER LINE COMPUTATION ON A SHAPE FILE
-# =================================================================================================
+
 class Shp2centerline(object):
+    '''
+    MAIN CLASS FOR EXECUTING CENTER LINE COMPUTATION ON A SHAPE FILE
+    '''
 
     def __init__(self, inputSHP, outputSHP, dist, clean_dist, verbose=True):
         self.inshp = inputSHP
         self.outshp = outputSHP
+
         self.dist = abs(dist)
         self.clean_dist = clean_dist
+
         self.verbose = verbose
+
         self.dct_polygons = {}
         self.dct_centerlines = {}
 

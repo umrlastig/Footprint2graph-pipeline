@@ -5,7 +5,7 @@ import unittest
 import os
 import tracklib as tkl
 
-from footprint2graph import setupenv
+from footprint2graph import prepareEnv, setupEnv
 from footprint2graph import run_iteration
 
 
@@ -17,13 +17,17 @@ class TestZone1(unittest.TestCase):
 
 
     def setUp (self):
-        self.resource_path = os.path.join(os.path.split(__file__)[0], "..")
+        resource_path = os.path.join(os.path.split(__file__)[0], "..")
 
-        self.RESPATH = os.path.join(self.resource_path, './test/result/')
-        setupenv(self.RESPATH)
+        self.RESPATH = os.path.join(resource_path, './test/result1/')
+
+        prepareEnv(self.RESPATH)
+
+        iteration_index = 1
+        setupEnv(self.RESPATH, iteration_index)
 
         #  Import du réseau
-        netpath = os.path.join(self.resource_path, 'data/network2.csv')
+        netpath = os.path.join(resource_path, 'data/network2.csv')
         fmt = tkl.NetworkFormat({
                "pos_edge_id": 1,
                "pos_source": 2,
@@ -39,6 +43,7 @@ class TestZone1(unittest.TestCase):
         tkl.stochastics.seed(333)
         noiser = tkl.NoiseProcess(amps=2.5, kernels=tkl.ExponentialKernel(80))
 
+
         # generate simulated trajectories from the network
         collection = tkl.generateTracksOnNetwork(self.network, N=100, p_round_trip=0.05, p_cplx_trip=0.10, resolution=1, noiser=noiser)
         # add 3 attributes
@@ -47,6 +52,7 @@ class TestZone1(unittest.TestCase):
             track.createAnalyticalFeature('MID', idx+1)
 
         self.collection = collection
+
 
     
     def testPipeline(self):
@@ -59,6 +65,11 @@ class TestZone1(unittest.TestCase):
         run_iteration(pipeline_idx, self.RESPATH, self.collection)
 
 
+
+        # =====================================================================
+        # On teste quelques résultats intermédiaires
+
+        # nombre de traces en point d'entrée
         fmt = tkl.TrackFormat({'ext': 'CSV',
                                'srid': 'ENU',
                                'id_E': 1,'id_N': 0, 'id_U': 3,'id_T': 2,

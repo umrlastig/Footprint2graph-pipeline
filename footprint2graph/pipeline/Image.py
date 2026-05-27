@@ -15,44 +15,54 @@ import csv
 csv.field_size_limit(sys.maxsize)
 
 import numpy as np
-# import matplotlib.pyplot as plt
-
-from scipy.ndimage import maximum_filter
+# from scipy.ndimage import maximum_filter
 from skimage.morphology import remove_small_holes, remove_small_objects
 from skimage.measure import label, regionprops
 
+import fiona
 from osgeo import gdal, ogr, osr
 
 import tracklib as tkl
-
 from footprint2graph import Shp2centerline
+from footprint2graph import log_event
 
 
+'''
+Ce module
+
+-  Calcul d’une carte de densité à partir des traces GNSS
+-  De la vectorisation on extrait une ligne centrée ≡ arc de la topologie
 
 
+'''
 
 
 def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
-                       closing = True, prefix='PT',
-                       rep='resample_grid', cut_factor=2, interp_dist=5, clean_dist=0,
+                       pipeline_idx = None,
+                       cut_factor=2, interp_dist=5, clean_dist=0,
                        verbose=False):
 
-    #main_text   = "----------------------------------------------------------------------\r\n"
-    #main_text  += "STAGE 2 :                                   \r\n"
-    #main_text  += "   - Calcul d’une carte de densité à partir des traces GNSS \r\n"
-    #main_text  += "   - De la vectorisation on extrait une ligne centrée ≡ arc de la topologie \r\n"
-    #main_text  += "----------------------------------------------------------------------\r\n"
-    main_text  = "Starting rasterization and vectorization\n"
+    idx = int (pipeline_idx)
+
+    main_text  = "Starting rasterization and vectorization (iteration " + str(idx) + ") \n"
     print(main_text, end='')
 
-
     respath = RESPATH + 'image/'
+
+    if idx == 1:
+        rep = 'resample_grid'
+    else:
+        rep = 'points_not_mm_1'
+
+    prefix = str(idx)
 
 
     # =============================================================================
     #       Chargement des traces GPS
     #  Ici elles sont mises dans un fichier CSV dont la géométrie de la trace est
     #  dans le format WKT
+
+    print ('    Loading tracks from : ', rep)
     t0 = time.time()
 
     fmt = tkl.TrackFormat({'ext': 'CSV',
@@ -68,6 +78,10 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     print ('    Number of tracks to load: ', total)
 
 
+    # =========================================================================
+    #      On construit G1
+
+    print ('    Building high-resolution geometry density grid G1 : ', G1_SIZE, 'm ...')
 
     bbox = tracks.bbox()
 
@@ -89,11 +103,35 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
         rasterG1.addAFMap(cle)
 
 
+
+    # =========================================================================
+    #      On construit G2
+
+    print ('    Building low-resolution contextual density grid G2 : ', G2_SIZE, 'm ...')
+
+    resolutionG2 = (G1_SIZE, G1_SIZE)
+
+    rasterG2 = tkl.Raster(bbox=bbox, resolution=resolutionG2, margin=marge,
+                    align=tkl.BBOX_ALIGN_LL,
+                    novalue=tkl.NO_DATA_VALUE)
+
+    # Pour chaque algo-agg on crée une grille vide
+    for idx, af_algo in enumerate(af_algos):
+        aggregate = cell_operators[idx]
+        cle = tkl.AFMap.getMeasureName(af_algo, aggregate)
+        rasterG2.addAFMap(cle)
+
+
+    # =========================================================================
+    #      On alimente les deux grilles avec les traces
+
+    print ('    Assigning track points to the G1 and G2 grids')
+
     cpt = 1
     for trace in tracks:
 
         if cpt%500 == 0:
-            print ('    ', cpt, '/', total)
+            print ('        ', cpt, '/', total)
         cpt += 1
 
         tid = trace.getObsAnalyticalFeature('TID', 0)
@@ -102,9 +140,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
         trace.tid = mid
 
         rasterG1.addCollectionToRaster(tkl.TrackCollection([trace]))
-
-
-
+        rasterG2.addCollectionToRaster(tkl.TrackCollection([trace]))
 
 
 
@@ -113,29 +149,38 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
 
 
     # compute aggregate
-    print ("Starting heatmap computation ...")
+    print ("    Computing G1 ...")
     rasterG1.computeAggregates()
 
-    
+    print ("    Computing G2 ...")
+    # rasterG2.computeAggregates()
+    createG2(rasterG2, G1_SIZE, G2_SIZE)
+
+
     grilleG1 = rasterG1.getAFMap('uid#co_count_distinct')
-    for i in range(grilleG1.raster.nrow):
-        for j in range(grilleG1.raster.ncol):
-            grilleG1.grid[i][j] = grilleG1.grid[i][j] / (G1_SIZE*G1_SIZE)
-    
+    grilleG1.grid = grilleG1.grid / (G1_SIZE*G1_SIZE)
     pathG1 = respath + 'G1_' + prefix + '.asc'
-    print ('pathG1', pathG1)
     tkl.RasterWriter.writeMapToAscFile(pathG1, grilleG1)
-    
+
+
+    grilleG2 = rasterG2.getAFMap('uid#co_count_distinct')
+    grilleG2.grid = grilleG2.grid / (G2_SIZE*G2_SIZE)
+    pathG2 = respath + 'G2_' + prefix + '.asc'
+    tkl.RasterWriter.writeMapToAscFile(pathG2, grilleG2)
+
+
 
 
     # =============================================================================
 
+    print ('    Building contrast grid : ', G1_SIZE, 'm')
+
     # Combien de cellules de chaque côté pour la petite résolution ?
-    nb = math.floor(G2_SIZE / G1_SIZE)
+    #nb = math.floor(G2_SIZE / G1_SIZE)
 
     epsilon = 0.001
     
-    # On construit une grille vide comme G1
+    # On construit une grille vide comme G1 pou K
     box = tkl.Bbox(tkl.ENUCoords(rasterG1.xmin, rasterG1.ymin),
                    tkl.ENUCoords(rasterG1.xmax, rasterG1.ymax))
     res = rasterG1.resolution
@@ -145,21 +190,19 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     rasterK.addAFMap('K')
 
 
-    G2 = maximum_filter(grilleG1.grid, size=nb)
-    pathG2 = respath + 'G2_' + prefix + '.asc'
-    print ('pathG2', pathG2)
-    writeArray(pathG2, G2)
-
-    
     for i in range(rasterK.nrow):
         for j in range(rasterK.ncol):
             x = rasterK.xmin + j * res[0] + 1
             y = rasterK.ymin - (i - rasterK.nrow + 1) * res[1] + 1
-            (column, line) = rasterG1.getCell(tkl.ENUCoords(x, y))
-            g1 = grilleG1.grid[line][column]
+
+            (column1, line1) = rasterG1.getCell(tkl.ENUCoords(x, y))
+            g1 = grilleG1.grid[line1][column1]
+
+            (column2, line2) = rasterG2.getCell(tkl.ENUCoords(x, y))
+            g2 = grilleG2.grid[line2][column2]
     
-            g2 = G2[line][column] / (nb * G1_SIZE * nb * G1_SIZE)
-            #g2 = G2[line][column] / (G2_SIZE * G2_SIZE)
+            #g2 = G2[line][column] / (nb * G1_SIZE * nb * G1_SIZE)
+            #g2 = grilleG2[line][column] / (G2_SIZE * G2_SIZE)
     
             if g1 <= 2 / (G1_SIZE * G1_SIZE):
                 g1 = 0
@@ -192,14 +235,13 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     for i in range(raster.nrow):
         for j in range(raster.ncol):
             v = grilleK.grid[i][j]
-            if v > SEUIL_DENSITE:
+            if v >= SEUIL_DENSITE:
                 raster.getAFMap(0).grid[i][j] = 1
             else:
                 raster.getAFMap(0).grid[i][j] = 0
     
     pathB = respath + 'B_' + prefix + '.asc'
     tkl.RasterWriter.writeMapToAscFile(pathB, raster.getAFMap(0))
-
 
     t1 = time.time()
     total = t1-t0
@@ -208,123 +250,60 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     t0 = t1
 
     # =========================================================================
-    print ("Starting morphological closing ...")
 
     pathB             = respath + 'B_' + prefix + '.asc'
-    patherosion       = respath + 'erosion_' + prefix + '.tif'
     pathdilatation    = respath + 'dilatation_' + prefix + '.tif'
-    pathrien          = respath + 'rien_' + prefix + '.tif'
+    patherosion       = respath + 'erosion_' + prefix + '.tif'
+    pathimageclean    = respath + 'imageclean_' + prefix + '.tif'
+
     surfpath          = respath + 'surface_' + prefix + '.shp'
     roadsurfpath      = respath + 'road_surface_' + prefix + '.shp'
     roadsurflissepath = respath + 'road_surface_lissee_' + prefix + '.shp'
     squelettepath     = RESPATH + 'network/squelette_' + prefix + '.shp'
 
-    try:
-        os.remove(patherosion)
-        os.remove(pathdilatation)
-        if verbose:
-            print(f"Files '{patherosion}' and '{pathdilatation}' deleted successfully.")
-    except FileNotFoundError:
-        if verbose:
-            print(f"File '{patherosion}' or '{pathdilatation}' not found.")
+    
 
-    try:
-        os.remove(respath + 'road_surface_' + prefix + '.shp')
-        os.remove(respath + 'road_surface_' + prefix + '.shx')
-        os.remove(respath + 'road_surface_' + prefix + '.dbf')
-        os.remove(respath + 'road_surface_' + prefix + '.prj')
-        if verbose:
-            print(f"Files road_surface.shp deleted successfully.")
-    except FileNotFoundError:
-        if verbose:
-            print(f"File '{roadsurfpath}' not found.")
-
-    try:
-        os.remove(respath + 'road_surface_lissee_' + prefix + '.shp')
-        os.remove(respath + 'road_surface_lissee_' + prefix + '.shx')
-        os.remove(respath + 'road_surface_lissee_' + prefix + '.dbf')
-        if verbose:
-            print(f"Files road_surface_lissee.shp deleted successfully.")
-    except FileNotFoundError:
-        if verbose:
-            print(f"File '{roadsurflissepath}' not found.")
-
-    try:
-        os.remove(respath + 'surface_' + prefix + '.shp')
-        os.remove(respath + 'surface_' + prefix + '.shx')
-        os.remove(respath + 'surface_' + prefix + '.dbf')
-        os.remove(respath + 'surface_' + prefix + '.prj')
-        if verbose:
-            print(f"Files surface.shp deleted successfully.")
-    except FileNotFoundError:
-        if verbose:
-            print(f"File '{roadsurfpath}' not found.")
-
-    try:
-        os.remove(RESPATH + 'network/squelette_' + prefix + '.shp')
-        os.remove(RESPATH + 'network/squelette_' + prefix + '.shx')
-        os.remove(RESPATH + 'network/squelette_' + prefix + '.dbf')
-        os.remove(RESPATH + 'network/squelette_' + prefix + '.cpg')
-        if verbose:
-            print(f"Files '{squelettepath}' deleted successfully.")
-    except FileNotFoundError:
-        if verbose:
-            print(f"File '{squelettepath}' not found.")
-
-
-
-
-
-    # =============================================================================
+    # =========================================================================
     #   On charge le binaire
 
     rasterB = tkl.RasterReader.readFromAscFile(pathB, name='B', separator='\t')
     mapBinaire = rasterB.getAFMap('B')
 
 
-
-
-    # =============================================================================
+    # =========================================================================
     #   Dilatation + Erosion
 
-    if closing:
-        mask = np.array([
+    print ("Starting morphological closingImage ...")
+
+    mask = np.array([
             [0,1,0],
             [1,1,1],
             [0,1,0]])
 
-        # Dilatation
-        mapBinaire.filter(mask, np.max)
-        tkl.RasterWriter.writeMapToAscFile(pathdilatation, mapBinaire)
+    # Dilatation
+    mapBinaire.filter(mask, np.max)
+    tkl.RasterWriter.writeMapToAscFile(pathdilatation, mapBinaire)
 
-        # Erosion
-        if prefix=='PT':
-            mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
-            mapBinaire.filter(mask, np.max)                        # Dilatation
-            mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
-            tkl.RasterWriter.writeMapToAscFile(patherosion, mapBinaire)
-            pathdepart = patherosion
-        else:
-            pathdepart = pathdilatation
-    else:
-        asize = G1_SIZE * G1_SIZE * G1_SIZE * G1_SIZE + 1
-        clean = remove_small_holes(mapBinaire.grid.astype(bool), area_threshold=asize,
+    # Erosion
+    mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
+    mapBinaire.filter(mask, np.max)                        # Dilatation
+    mapBinaire.filter(np.array([[1]]), lambda x : 1-x)     # Dual de la carte
+
+    tkl.RasterWriter.writeMapToAscFile(patherosion, mapBinaire)
+
+
+    # Nettoyage : remplissage des trous et suppression des toutes petites zones
+    asize = G1_SIZE * G1_SIZE * G1_SIZE * G1_SIZE + 1
+
+    clean = remove_small_holes(mapBinaire.grid.astype(bool), area_threshold=asize,
                                      connectivity=1)
-        clean = remove_small_objects(clean, min_size=asize,
+    clean = remove_small_objects(clean, min_size=asize,
                                      connectivity=1)
-        clean_uint8 = clean.astype(np.uint8)
+    clean_uint8 = clean.astype(np.uint8)
+    mapBinaire.grid = clean_uint8
 
-
-        # print(np.unique(clean_uint8))
-
-        mapBinaire.grid = clean_uint8
-
-
-
-        tkl.RasterWriter.writeMapToAscFile(pathrien, mapBinaire)
-        pathdepart = pathrien
-
-
+    # print(np.unique(clean_uint8))
+    tkl.RasterWriter.writeMapToAscFile(pathimageclean, mapBinaire)
 
     t1 = time.time()
     total = t1-t0
@@ -337,7 +316,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     # =========================================================================
     #   Vectorisation dans le layer surface
 
-    print ("Vectorizing ...")
+    print ("Vectorizing cleaned image ...")
 
     shpDriver = ogr.GetDriverByName("ESRI Shapefile")
     dsSurface = shpDriver.CreateDataSource(surfpath)
@@ -353,7 +332,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     dst_field = layerSurface.GetLayerDefn().GetFieldIndex("DN")
 
     #  get raster datasource
-    dsDepart = gdal.Open(pathdepart)
+    dsDepart = gdal.Open(pathimageclean)
     srcband = dsDepart.GetRasterBand(1)
 
     gdal.Polygonize(srcband, None, layerSurface, dst_field, [], callback=None)
@@ -369,20 +348,27 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
 
 
     # =========================================================================
-    # On "transfere" Surface vers RoadSurface
+    # On "extrait" les roads vers RoadSurface
+
+    print ("Extracting road surface vector features ...")
+
+    NB_GS = 0
+    NB_PS = 0
+    MOY_PS = 0
 
     # ouvrir la source
     dsSurface = ogr.Open(surfpath)
     layer = dsSurface.GetLayer(0)
-    print("    Number of polygonize features: ", layer.GetFeatureCount())
+    NB_TOT = layer.GetFeatureCount()
+    print("    Number of polygonize features: ", NB_TOT)
 
     dsRoadSurface = shpDriver.CreateDataSource(roadsurfpath)
     layerRoadSurface = dsRoadSurface.CreateLayer("road_surface", srs=l93Ref)
 
-    '''
-    DN=0 + filtre sur la surface + id + enleve le cadre
-           on corrige la géométrie
-    '''
+    
+    # DN=0 + filtre sur la surface + id + enleve le cadre
+    #       on corrige la géométrie
+    
 
     field_defn = ogr.FieldDefn("id", ogr.OFTInteger)
     layerRoadSurface.CreateField(field_defn)
@@ -411,6 +397,7 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
                     iou = intersection.GetArea() / union.GetArea()
                     if iou < 0.99:
                         cpt += 1
+
                         # print ('pas cadre')
                         g = geom.Clone()
                         if not g.IsValid():
@@ -420,7 +407,13 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
                         new_feat.SetGeometry(g)
                         new_feat.SetField("id", cpt)
                         layerRoadSurface.CreateFeature(new_feat)
+                        NB_GS += 1
                         new_feat = None
+
+                else:
+                    NB_PS += 1
+                    MOY_PS += area
+
 
 
     print("    Number of polygonize features copied: ", cpt)
@@ -428,6 +421,11 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
     # fermer proprement
     layerRoadSurface.SyncToDisk()
     dsRoadSurface = None
+
+
+
+
+
 
 
     # -----------------------------------------
@@ -468,9 +466,65 @@ def density_polygonize(RESPATH, G1_SIZE, G2_SIZE, SEUIL_DENSITE, SEUIL_SURFACE,
 
 
     # =========================================================================
+    #    Journalisation des résultats
+
+    n_features = 0
+    with fiona.open(squelettepath, 'r') as shapefile:
+        n_features = len(shapefile)
+
+    try:
+        log_event(RESPATH + "image"+ str(prefix) + ".json", {
+            "High-resolution grid cell size (m)": G1_SIZE,
+            "Low-resolution grid cell size (m)": G2_SIZE,
+            "Number of neighboring cells to consider": math.floor(G2_SIZE / (G1_SIZE*2)),
+            "Cell cluster size threshold for filling or removal (m2)": asize,
+            "Number of polygonize features": NB_TOT,
+            "Number of small polygonized features": NB_PS,
+            "Average area of small polygons (m2)": round(MOY_PS / NB_PS),
+            "Number of polygonized features above threshold": NB_GS,
+            "Number of edges in the skeleton": n_features,
+            "ts": time.time()
+        })
+    except Exception as e:
+        print (e)
+        print ('Error while writing image information to log')
+
+
+    # =========================================================================
 
     print ("Stage 2 completed: rasterization and vectorization.")
     # Fin
+
+
+
+
+def createG2(rasterG2, G1_SIZE, G2_SIZE):
+    grid = []
+    for i in range(rasterG2.nrow):
+        grid.append(i)
+        grid[i] = []
+        for j in range(rasterG2.ncol):
+            grid[i].append(j)
+            grid[i][j] = []
+
+
+    for (i, j), tarray in rasterG2.collectionValuesGrid['uid'].items():
+        for s in tarray:
+            grid[i][j].append(s)
+
+
+    grilleG2 = rasterG2.getAFMap('uid#co_count_distinct')
+    nb = math.floor(G2_SIZE / (G1_SIZE*2))
+    print ('    Number of neighboring cells to consider:', nb)
+    for i in range(rasterG2.nrow):
+        for j in range(rasterG2.ncol):
+            unique_values = set()
+            for s in range(max(0,i-nb), min(i+nb+1, rasterG2.nrow)):
+                for t in range(max(0,j-nb), min(j+nb+1, rasterG2.ncol)):
+                    all_values = grid[s][t]
+                    for st in all_values:
+                        unique_values.add(st)
+            grilleG2.grid[i][j] = len(unique_values)
 
 
 
@@ -487,6 +541,8 @@ def bbox_to_polygon(minx, maxx, miny, maxy):
     return poly
 
 
+
+# import matplotlib.pyplot as plt
 
 def smoothingLayer(roadsurfpath, roadsurflissepath, shpDriver, r, f):
 
@@ -667,18 +723,6 @@ def smoothing(geom, r, f):
     return out_geom
 
 
-
-def writeArray(filename, arr):
-
-    with open("output.asc", "w") as f:
-        f.write(f"ncols {arr.shape[1]}\n")
-        f.write(f"nrows {arr.shape[0]}\n")
-        f.write("xllcorner 0\n")
-        f.write("yllcorner 0\n")
-        f.write("cellsize 1\n")
-        f.write("NODATA_value -9999\n")
-    
-        np.savetxt(f, arr, fmt="%d")
 
 
 
