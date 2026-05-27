@@ -8,7 +8,7 @@ Footprint2graph-pipeline’s documentation
 =========================================
 
 **Footprint2Graph Pipeline for Outdoor Recreation** (*Footprint2graph-pipeline*) is an open-source Python
-processing pipeline (MIT license) for generating outdoor activity footprint networks
+processing pipeline (MIT license) for generating outdoor activity footprint graphs
 from GNSS trajectories, representing, for example, hikers’ or runners’ footprints within
 a defined spatial and temporal extent. The pipeline consists of several components,
 including GNSS point map-matching onto a network and trajectory merging,
@@ -28,7 +28,7 @@ effectively used by practitioners.
 
 
 Table of Contents
-==================
+------------------
 
 .. toctree::
   :maxdepth: 1
@@ -38,7 +38,7 @@ Table of Contents
 
 
 History and acknowledgement
-============================
+-----------------------------
 
 *Footprint2graph-pipeline* was initiated in 2025 as a comprehensive Python framework that builds
 upon components previously developed and metrologically analyzed within the *Tracklib* library,
@@ -51,7 +51,7 @@ and was supported by the ANR under grant agreement no. ANR-23-CE55-0003.
 
 *Footprint2graph-pipeline* has been developed by two contributors who are also involved in
 maintaining *Tracklib*. It is designed to be used within the IntForOut project (2024-2027)
-to generate different networks for various activities across diverse spatial and temporal scales.
+to generate different graphs for various activities across diverse spatial and temporal scales.
 
 
 How to Cite Footprint2graph-pipeline
