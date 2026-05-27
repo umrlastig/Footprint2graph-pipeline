@@ -35,6 +35,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+        mkdir -p ${{ github.workspace }}/test/result1
         coverage run -m --source=footprint2graph/ pytest test/
         coverage xml
     
