@@ -19,7 +19,8 @@ OutdoorFootprintNetworkPipeline requires the following Python packages:
 * `tracklib <https://pypi.org/project/tracklib/>`_ - tracklib for the variety of tools, operators and functions to manipulate GPS trajectories.
 * `matplotlib <https://pypi.org/project/matplotlib/>`_ - Used for colormaps and 2D plotting.
 * osgeo : gdal, ogr, osr (pour la partie vectorisation)
-* Fiona, Shapely (centerline et smooth), Rasterio, Geopandas
+* Shapely (centerline et smooth)
+* Fiona, Rasterio, Geopandas
 
 .. Environment Setup
 
